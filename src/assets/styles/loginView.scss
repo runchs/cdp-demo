@@ -1,0 +1,24 @@
+.login-view-container {
+    .logo-wrp {
+        background-color: #7460cf;
+        img {
+            margin-top: -30px;
+            width: 90%;
+        }
+    }
+    .form-wrp {
+        max-width: 500px;
+        .label-wrp {
+            min-width: 100px;
+        }
+    }
+    .eye-icon {
+        position: absolute;
+        right: 10px;
+        top: 50%;
+        transform: translateY(-50%);
+        cursor: pointer;
+        width: 20px;
+        height: 20px;
+    }
+}
