@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
 // components
@@ -12,6 +12,12 @@ import Logo from '@/assets/artworks/logoLeft.jpg';
 import EyeHideIcon from '@/assets/svg/eyeHideIcon.svg';
 import EyeShowIcon from '@/assets/svg/eyeShowIcon.svg';
 
+enum CRole {
+  User = "user",
+  Administrator = "administrator",
+  Admin = "admin"
+}
+
 interface ICredentials {
   username: string;
   password: string;
@@ -22,6 +28,7 @@ const LoginView: React.FC = () => {
   const [credentials, setCredentials] = useState<ICredentials>({ username: "", password: "" });
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [role, setRole] = useState<CRole | null>(null);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setShowAlert(false);
@@ -32,9 +39,9 @@ const LoginView: React.FC = () => {
     if (!credentials.username || !credentials.password) {
       setShowAlert(true);
     } else {
-      // connect
+      // connect api
       setShowAlert(false);
-      navigate("/search");
+      setRole(CRole.User);
     }
   };
 
@@ -49,6 +56,25 @@ const LoginView: React.FC = () => {
   const togglePasswordVisibility = () => {
     setShowPassword(!showPassword);
   };
+
+  useEffect(() => {
+    if (!role) return;
+
+    switch (role) {
+      case CRole.User:
+        navigate("/search");
+        break;
+      case CRole.Administrator:
+        navigate("/management");
+        break;
+      case CRole.Admin:
+        navigate("/admin");
+        break;
+      default:
+        navigate("/");
+        break;
+    }
+  }, [role]);
 
   return (
     <Row className="gx-0 h-100 login-view-container">

@@ -1,5 +1,6 @@
 @use "./assets/styles/loginView.scss";
 @use "./assets/styles/customTabs.scss";
+@use "./assets/styles/c360.scss";
 
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
 
@@ -7,6 +8,11 @@
 	text-align: center;
 	font-family: 'Sarabun', sans-serif;
 	height: 100vh;
+}
+
+// font
+.fs-7 {
+	font-size: 0.85rem !important;
 }
 
 // color
@@ -24,6 +30,10 @@
 
 .bg-suggest-action {
 	background-color: #faf86c;
+}
+
+.bg-promotion {
+	background-color: #d7daf9;
 }
 
 // input

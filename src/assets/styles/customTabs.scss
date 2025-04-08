@@ -1,24 +1,40 @@
 .tabs-wrp {
-	position: fixed;
-	top: 0;
-	width: 100%;
-	background: white;
-	z-index: 1000;
-	box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    position: fixed;
+    top: 0;
+    width: 100%;
+    z-index: 1000;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+    height: 50px;
+    background-color: #020557;
+    border-bottom: none !important;
+    color: #fff;
 
-    .nav-item {
-		height: 50px;
-	}
+    .nav-tabs {
+        border-bottom: none !important;
 
-    .nav-link {
-        height: 50px;
+        .nav-item {
+            height: 100%;
+            border: none !important;
+            padding: 5px !important;
+
+            .nav-link {
+                display: flex;
+                align-items: center;
+                height: 100%;
+                border-radius: 5px !important;
+                color: white !important;
+                border: none !important;
+
+                &.active {
+                    background-color: #282b70 !important;
+                }
+            }
+        }
     }
 }
 
 .tab-content-wrp {
-    margin-top: 45px; 
     height: calc(100vh - 45px);
-    overflow-y: auto; 
-} 
-
+    overflow-y: auto;
+}

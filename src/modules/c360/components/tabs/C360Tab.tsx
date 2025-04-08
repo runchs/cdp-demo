@@ -1,5 +1,32 @@
-import React from "react";
-import { Row, Col } from "react-bootstrap";
+import React, { useState, useEffect } from "react";
+
+// components
+import { Row, Col, Button } from "react-bootstrap";
+import Carousel from 'react-bootstrap/Carousel';
+import Form from 'react-bootstrap/Form';
+
+// modals
+import BaseModal from "@/components/modals/BaseModal";
+
+enum COfferResult {
+    Acknowledged = 'Acknowledged',
+    Interested = 'Interested',
+    NotInterested = 'Not Interested',
+}
+
+interface ICard {
+    id: number;
+    name: string;
+}
+
+interface IPromotion {
+    id: number;
+    title: string;
+    description: string;
+    periode: string;
+    eligibleCard: string;
+    offerResult: COfferResult | null;
+}
 
 interface IInfo {
     updateDate: string;
@@ -45,9 +72,9 @@ interface IInfo {
     dayPastDue: number;
     lastOverDueDate: string;
     // card 9
-    suggestCards: any[];
+    suggestCards: ICard[];
     // card 10
-    suggestPromotions: any[]
+    suggestPromotions: IPromotion[]
 }
 
 const infoMock: IInfo = {
@@ -100,10 +127,45 @@ const infoMock: IInfo = {
         { id: 3, name: 'Club Thailand JCB Card 3' }
     ],
     // card 10
-    suggestPromotions: []
+    suggestPromotions: [
+        {
+            id: 1,
+            title: 'Technology Innovation',
+            description: 'Exploring the latest advancements in technology and their impact on our future. Exploring the latest advancements in technology and their impact on our future. Exploring the latest advancements in technology and their impact on our future. Exploring the latest advancements in technology and their impact on our future.',
+            periode: '4 Sep 2024 - 30 Sep 2024',
+            eligibleCard: 'BIG C WORLD MASTERCARD',
+            offerResult: null
+        },
+        {
+            id: 2,
+            title: 'Digital Transformation',
+            description: 'How businesses are adapting to the digital age and embracing new technologies.',
+            periode: '4 Sep 2024 - 30 Sep 2024',
+            eligibleCard: 'BIG C WORLD MASTERCARD',
+            offerResult: null
+        },
+        {
+            id: 3,
+            title: 'Artificial Intelligence',
+            description: 'The role of AI in shaping the future of technology and human interaction.',
+            periode: '4 Sep 2024 - 30 Sep 2024',
+            eligibleCard: 'BIG C WORLD MASTERCARD',
+            offerResult: null
+        }
+    ]
 }
 
+const offerResultOptions = [
+    { label: "Acknowledged", value: "Acknowledged" },
+    { label: "Interested", value: "Interested" },
+    { label: "Not Interested", value: "Not Interested" },
+];
+
 const C360Tabs: React.FC = () => {
+    const [showModal, setShowModal] = useState(false);
+    const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
+
+
     const suggestCards = () => {
         return (
             <div>
@@ -117,20 +179,92 @@ const C360Tabs: React.FC = () => {
             </div>
         );
     };
-    
+
     const suggestPromotions = () => {
         return (
             <div>
-                {infoMock.suggestCards.length > 0 ? (
-                    infoMock.suggestCards.map(card => (
-                        <div key={card.id}>• {card.name}</div>
-                    ))
-                ) : (
-                    <div>• No Suggestions</div>
-                )}
+                <Carousel interval={5000} className="rounded-4 overflow-hidden shadow-sm bg-light">
+                    {infoMock.suggestPromotions.map((item) => (
+                        <Carousel.Item key={item.id}>
+                            <div
+                                className="d-flex flex-column promotion-wrp bg-promotion"
+                            >
+                                <div className="fw-bold fs-5">{item.title}</div>
+                                <div className="fs-7">
+                                    <div className="desc mt-2 mb-4">{item.description}</div>
+                                    <div><span className="fw-bold">Periode:</span> {item.periode}</div>
+                                    <div><span className="fw-bold">Eligible Card:</span> {item.eligibleCard}</div>
+                                    <Button variant="dark" className="mt-4 fs-7" onClick={() => handleOpenModal(item)}>More Detail</Button>
+                                </div>
+                            </div>
+                        </Carousel.Item>
+                    ))}
+                </Carousel>
+                {moreDetailsModal()}
             </div>
         );
     };
+
+    const handleOpenModal = (item: any) => {
+        setSelectedPromotion(item);
+        setShowModal(true);
+    };
+
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value as COfferResult;
+        setSelectedPromotion((prev) => {
+            if (!prev) return null;
+            return {
+                ...prev,
+                offerResult: value
+            };
+        });
+        console.log(selectedPromotion);
+    };
+
+    const moreDetailsModal = () => {
+        return (
+            <BaseModal
+                isShow={showModal}
+                onCancle={() => setShowModal(false)}
+                title="Promotion Detail"
+            >
+                <div>
+                    <div className="fs-4 fw-bold mb-3">{selectedPromotion?.title}</div>
+                    <div className="bg-promotion p-3 rounded-3 mb-3 fs-7">{selectedPromotion?.description}</div>
+                    <Row className="bg-promotion p-3 rounded-3 gx-0 fs-7">
+                        <Col xs={4}>
+                            <div className="fw-bold mb-2">Eligible Card:</div>
+                            <div>{selectedPromotion?.eligibleCard}</div>
+                        </Col>
+                        <Col xs={4}>
+                            <div className="fw-bold mb-2">Periode:</div>
+                            <div>{selectedPromotion?.periode}</div>
+                        </Col>
+                        <Col xs={4}>
+                            <div className="fw-bold mb-2">Offer Result:</div>
+                            <div><Form>
+                                <div className="mb-3">
+                                    {offerResultOptions.map((option, index) => (
+                                        <Form.Check
+                                            key={index}
+                                            type="radio"
+                                            name="radioGroup"
+                                            id={`radio-${index}`}
+                                            label={option.label}
+                                            value={option.value}
+                                            onChange={handleChange}
+                                        />
+                                    ))}
+                                </div>
+                            </Form></div>
+                        </Col>
+                    </Row>
+                </div>
+            </BaseModal>
+        );
+    }
 
     return (
         <div className="py-4 px-5 d-flex flex-column gap-3 bg-color-primary">

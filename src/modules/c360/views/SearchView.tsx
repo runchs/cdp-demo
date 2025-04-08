@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Row, Col } from "react-bootstrap";
 import Button from 'react-bootstrap/Button';
@@ -62,6 +62,11 @@ const SearchView: React.FC = () => {
       </Alert>
     }
   }
+
+  useEffect(() => {
+    setAEONId("");
+    setCustomerId("");
+  }, [selectedOption]);
 
   return (
     <div className="h-100 search-view-container bg-color-tertiary d-flex align-items-center">
