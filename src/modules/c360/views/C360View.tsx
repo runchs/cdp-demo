@@ -213,15 +213,21 @@ const C360Tabs: React.FC = () => {
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value as COfferResult;
-        setSelectedPromotion((prev) => {
-            if (!prev) return null;
-            return {
-                ...prev,
-                offerResult: value
-            };
-        });
-        console.log(selectedPromotion);
+
+        // สร้าง promotion ใหม่พร้อมค่าใหม่ที่ user เลือก
+        const updatedPromotion = {
+            ...selectedPromotion!,
+            offerResult: value
+        };
+
+        // update state เผื่อ UI ต้องใช้ต่อ
+        setSelectedPromotion(updatedPromotion);
     };
+
+    const onSavePromotion = () => {
+        console.log("ยิง api ด้วยข้อมูล:", selectedPromotion);
+    };
+
 
     const moreDetailsModal = () => {
         return (
@@ -229,6 +235,7 @@ const C360Tabs: React.FC = () => {
                 isShow={showModal}
                 onCancle={() => setShowModal(false)}
                 title="Promotion Detail"
+                onSave={() => onSavePromotion()}
             >
                 <div>
                     <div className="fs-4 fw-bold mb-3">{selectedPromotion?.title}</div>

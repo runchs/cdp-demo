@@ -14,7 +14,7 @@ import EyeShowIcon from '@/assets/svg/eyeShowIcon.svg';
 
 enum CRole {
   User = "user",
-  Administrator = "administrator",
+  Administrator = "administrator", 
   Admin = "admin"
 }
 
@@ -41,7 +41,7 @@ const LoginView: React.FC = () => {
     } else {
       // connect api
       setShowAlert(false);
-      setRole(CRole.User);
+      setRole(CRole.Administrator);
     }
   };
 
@@ -59,20 +59,10 @@ const LoginView: React.FC = () => {
 
   useEffect(() => {
     if (!role) return;
-
-    switch (role) {
-      case CRole.User:
-        navigate("/search");
-        break;
-      case CRole.Administrator:
-        navigate("/management");
-        break;
-      case CRole.Admin:
-        navigate("/admin");
-        break;
-      default:
-        navigate("/");
-        break;
+    if (role === CRole.User) {
+      navigate("/search", { state: { role } });
+    } else {
+      navigate("/information", { state: { role } });
     }
   }, [role]);
 

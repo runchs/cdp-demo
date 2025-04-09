@@ -1,0 +1,61 @@
+.base-table-wrapper {
+    overflow-x: auto;
+    border-radius: 15px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.base-table {
+    width: 100%;
+    min-width: 800px; // ✅ บังคับให้ scroll ถ้าคอลัมน์เยอะ
+    border-collapse: collapse;
+    table-layout: auto; // ✅ ขยายตามเนื้อหา และใช้ร่วมกับ th/td ได้ดี
+    background-color: #fff;
+
+    thead {
+        position: sticky;
+        top: 0;
+        background-color: #d7daf9;
+        z-index: 10;
+        box-shadow: 0 3px 5px rgba(0, 0, 0, 0.1);
+
+        th {
+            font-weight: 600;
+            text-align: left;
+            vertical-align: middle;
+            padding: 1rem;
+            background-color: #d7daf9;
+            white-space: nowrap;
+        }
+    }
+
+    tbody {
+        tr {
+            transition: background-color 0.2s ease;
+
+            &:hover {
+                cursor: default;
+            }
+
+            &:not(:last-child) {
+                border-bottom: 1px solid rgba(#d7daf9, 0.5);
+            }
+        }
+
+        td {
+            padding: 1rem;
+            vertical-align: middle;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            border: none;
+            max-width: 200px;
+        }
+    }
+
+    th,
+    td {
+        border-left: none;
+        border-right: none;
+    }
+}
