@@ -1,5 +1,6 @@
 import React from 'react';
 import { Table } from 'react-bootstrap';
+import '@/assets/styles/table.scss';
 
 export interface Column<T> {
   header: string;
