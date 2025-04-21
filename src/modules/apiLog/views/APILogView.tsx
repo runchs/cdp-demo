@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import Table, { Column } from "@/components/table/Table";
+import Table, { Column, CFilterType } from "@/components/table/Table";
 import Pagination, { IPagination } from "@/components/table/Pagination";
 
 interface IAPILog {
@@ -12,20 +12,20 @@ interface IAPILog {
   respMessage: string;
   respDateTime: string;
   timeUsage: string;
-  // action: React.ReactNode
+  action: React.ReactNode
 }
 
 const columns: Column<IAPILog>[] = [
-  { header: 'Trace ID', accessor: 'traceId' },
-  { header: 'Service name', accessor: 'serviceName' },
-  { header: 'Endpoint', accessor: 'endpoint' },
-  { header: 'Request message', accessor: 'reqMessage' },
-  { header: 'Request date time', accessor: 'reqDateTime' },
-  { header: 'Response code', accessor: 'respCode' },
-  { header: 'Response message', accessor: 'respMessage' },
-  { header: 'Response date time', accessor: 'respDateTime' },
-  { header: 'Time usage', accessor: 'timeUsage' },
-  // { header: 'Action', accessor: 'action' },
+  { header: 'Trace ID', accessor: 'traceId', filterType: CFilterType.Text },
+  { header: 'Service name', accessor: 'serviceName', filterType: CFilterType.Text },
+  { header: 'Endpoint', accessor: 'endpoint', filterType: CFilterType.Dropdown },
+  { header: 'Request message', accessor: 'reqMessage', filterType: CFilterType.Text },
+  { header: 'Request date time', accessor: 'reqDateTime', filterType: CFilterType.Date },
+  { header: 'Response code', accessor: 'respCode', filterType: CFilterType.Number },
+  { header: 'Response message', accessor: 'respMessage', filterType: CFilterType.Text },
+  { header: 'Response date time', accessor: 'respDateTime', filterType: CFilterType.Date },
+  { header: 'Time usage', accessor: 'timeUsage', filterType: CFilterType.Number, sortable: true},
+  { header: '', accessor: 'action', filterType: null },
 ];
 
 const APILogView: React.FC = () => {
@@ -38,9 +38,9 @@ const APILogView: React.FC = () => {
         perPage: 10,
     });
 
-    // const action = () => {
-    //     return <div className="btn btn-primary">test</div>
-    // }
+    const action = () => {
+        return <div className="btn btn-primary">test</div>
+    }
 
     const fetchData = async (page: number) => {
         // จำลองการเรียก API
@@ -54,7 +54,7 @@ const APILogView: React.FC = () => {
           respMessage: `Message ${i + 1}`,
           respDateTime: `2021-01-01 00:00:00`,
           timeUsage: `100`,
-          // action: action(),
+          action: action(),
         }));
 
         setData(mockData);
