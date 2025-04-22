@@ -114,42 +114,40 @@ function CustomTable<T extends object>({ data, columns }: CustomTableProps<T>) {
             <tr key={headerGroup.id}>
               {headerGroup.headers.map(header => (
                 <th key={header.id}>
-                  {(header.column.columnDef.meta as CustomColumnMeta<T>)?.filterType &&
-                    header.column.getCanSort() && (
-                      <div
-                        className="mb-2 d-flex justify-content-between align-items-center"
-                        style={{ maxWidth: '200px' }}
+                  <div
+                    className="mb-2 d-flex justify-content-between align-items-center"
+                    style={{ maxWidth: '200px' }}
+                  >
+                    <div
+                      className="text-truncate"
+                    >
+                      {flexRender(header.column.columnDef.header, header.getContext())}
+                    </div>
+
+                    {header.column.getCanSort() && (
+                      <span
+                        className="text-muted ms-2"
+                        onClick={header.column.getToggleSortingHandler()}
+                        style={{
+                          flexShrink: 0,
+                          cursor: header.column.getCanSort() ? 'pointer' : 'default',
+                        }}
                       >
-                        <div
-                          className="text-truncate"
-                        >
-                          {flexRender(header.column.columnDef.header, header.getContext())}
-                        </div>
-                        {/* {header.column.columnDef.enableSorting && (
-                          
-                        ) } */}
-                        <span
-                          className="text-muted ms-2"
-                          onClick={header.column.getToggleSortingHandler()}
-                          style={{
-                            flexShrink: 0,
-                            cursor: header.column.getCanSort() ? 'pointer' : 'default',
-                          }}
-                        >
-                          {header.column.getIsSorted() === 'desc' ? (
-                            <LuArrowDown size={12} />
-                          ) : header.column.getIsSorted() === 'asc' ? (
-                            <LuArrowUp size={12} />
-                          ) : (
-                            <LuArrowUpDown size={12} />
-                          )}
-                        </span>
-                      </div>
+                        {header.column.getIsSorted() === 'desc' ? (
+                          <LuArrowDown size={12} />
+                        ) : header.column.getIsSorted() === 'asc' ? (
+                          <LuArrowUp size={12} />
+                        ) : (
+                          <LuArrowUpDown size={12} />
+                        )}
+                      </span>
                     )}
+
+                  </div>
 
                   {(header.column.columnDef.meta as CustomColumnMeta<T>)?.filterType &&
                     header.column.getCanFilter() && (
-                        resolveFilterType(header)
+                      resolveFilterType(header)
                     )}
                 </th>
               ))}
