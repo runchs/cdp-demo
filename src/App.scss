@@ -1,6 +1,7 @@
 @use "./assets/styles/loginView.scss";
 @use "./assets/styles/customTabs.scss";
 @use "./assets/styles/c360.scss";
+@use './assets/styles/variables.scss' as v;
 
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
 
@@ -16,24 +17,41 @@
 }
 
 // color
-.bg-color-primary {
-	background-color: #7982e9;
+.bg-purple {
+	background-color: v.$purple-primary;
 }
 
-.bg-color-secondary {
-	background-color: #a8b7f5;
+.bg-purple-light {
+	background-color: v.$purple-light;
 }
 
-.bg-color-tertiary {
-	background-color: #f8f8f8;
+.bg-purple-dark {
+	background-color: v.$purple-dark;
 }
 
-.bg-suggest-action {
-	background-color: #faf86c;
+.bg-purple-gradient {
+	background: linear-gradient(
+    to bottom,
+    #e3e5fb 0%,
+    #cccdef 50%,
+    #b3b3de 100%
+  );
 }
 
-.bg-promotion {
-	background-color: #d7daf9;
+.text-purple {
+	color: v.$purple-dark;
+}
+
+.bg-yellow {
+	background-color: v.$yellow-primary;
+}
+
+.bg-yellow-gradient {
+	background: linear-gradient(to bottom, #ffd58c 0%, v.$yellow-primary 100%);
+}
+
+.text-yellow {
+	color: v.$yellow-primary;
 }
 
 // input
@@ -72,6 +90,20 @@
 
 .label-wrp {
 	min-width: 100px;
+}
+
+// button
+.purple-btn {
+	background-color: v.$purple-primary !important;
+	color: #fff !important;
+	border-radius: 10px !important;
+	border: none !important;
+	width: 100px !important;
+	height: 40px !important;
+
+	&:hover {
+		background-color: v.$purple-dark !important;
+	}
 }
 
 // modal

@@ -1,3 +1,5 @@
+@use './variables.scss' as v;
+
 .tabs-wrp {
     position: fixed;
     top: 0;
@@ -5,29 +7,37 @@
     z-index: 1000;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
-    height: 50px;
-    background-color: #020557;
-    border-bottom: none !important;
+    height: 60px;
+    background-color: v.$purple-primary;
     color: #fff;
+    padding: 0 !important;
 
     .nav-tabs {
         border-bottom: none !important;
+        height: 100%;
 
         .nav-item {
             height: 100%;
             border: none !important;
-            padding: 5px !important;
 
             .nav-link {
                 display: flex;
                 align-items: center;
+                justify-content: center;
                 height: 100%;
-                border-radius: 5px !important;
-                color: white !important;
+                color: #fff !important;
                 border: none !important;
+                min-width: 100px;
+                border-bottom: 4px solid v.$purple-primary !important;
+                font-weight: bold;
 
                 &.active {
-                    background-color: #282b70 !important;
+                    background-color: transparent;
+                    border-bottom: 4px solid v.$yellow-primary !important;
+                }
+
+                &:hover:not(.active) {
+                    color: #d4d4d4 !important;
                 }
             }
         }
@@ -35,6 +45,6 @@
 }
 
 .tab-content-wrp {
-    height: calc(100vh - 45px);
+    height: calc(100vh - 60px);
     overflow-y: auto;
 }

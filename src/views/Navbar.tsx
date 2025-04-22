@@ -58,7 +58,7 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
     <div className="h-100">
       <Navbar className="px-4 tabs-wrp">
         <Navbar.Brand>
-          <img src={Logo} alt="Logo" style={{ height: "32px" }} />
+          <img src={Logo} alt="Logo" style={{ height: "45px" }} />
         </Navbar.Brand>
         <Nav
           variant="tabs"

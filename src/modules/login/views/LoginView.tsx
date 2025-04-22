@@ -41,7 +41,7 @@ const LoginView: React.FC = () => {
     } else {
       // connect api
       setShowAlert(false);
-      setRole(CRole.Administrator);
+      setRole(CRole.User);
     }
   };
 
@@ -67,9 +67,10 @@ const LoginView: React.FC = () => {
   }, [role]);
 
   return (
-    <Row className="gx-0 h-100 login-view-container">
-      <Col xs={7} className="logo-wrp d-flex align-items-center"><img src={Logo} alt="logo" /></Col>
-      <Col xs={5} className="d-flex align-items-center justify-content-center">
+    <div className="h-100 login-view-container">
+    <Row className="gx-0 login-box">
+      <Col xs={5} className="logo-wrp d-flex align-items-center"><img src={Logo} alt="logo" /></Col>
+      <Col xs={7} className="d-flex align-items-center justify-content-center bg-white">
         <div className="fw-bold w-75 form-wrp">
           <div className="fs-1 mb-5">Sign in</div>
           {alertMessage()}
@@ -102,12 +103,14 @@ const LoginView: React.FC = () => {
               </Col>
             </Row>
             <div className="text-start mt-5">
-              <Button variant="primary" onClick={handleLogin}>Sign in</Button>
+              <Button variant="primary" className="purple-btn fw-bold shadow-sm" onClick={handleLogin}>Sign in</Button>
             </div>
           </div>
         </div>
       </Col>
     </Row>
+    </div>
+
   );
 };
 

@@ -4,21 +4,27 @@ import { Row, Col } from "react-bootstrap";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
+import { convertId, CConvertType, IConvertResp } from '@/composables/convertId'
 
 enum COption {
-  AEON_ID = '1',
-  CUSTOMER_ID = '2'
+  AeonId = '1',
+  CustomerId = '2'
 }
 
 const SearchView: React.FC = () => {
 
   const navigate = useNavigate();
 
-  const [selectedOption, setSelectedOption] = useState<COption>(COption.AEON_ID);
+  const [selectedOption, setSelectedOption] = useState<COption>(COption.AeonId);
   const [aeonId, setAEONId] = useState<string>("");
   const [customerId, setCustomerId] = useState<string>("");
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMsg, setAlertMsg] = useState<string>("");
+
+  const [convertResp, setConvertResp] = useState<IConvertResp>({
+    aeonId: '',
+    customerId: '',
+  });
 
   const [error, setError] = useState<boolean>(false); // mock for test
 
@@ -37,23 +43,32 @@ const SearchView: React.FC = () => {
   };
 
   const handleSearch = () => {
-    if (selectedOption === COption.AEON_ID && !aeonId) {
+    if (selectedOption === COption.AeonId && !aeonId) {
       setAlertMsg("The AEON ID cannot be empty.");
       setShowAlert(true);
-    } else if (selectedOption === COption.CUSTOMER_ID && !customerId) {
+    } else if (selectedOption === COption.CustomerId && !customerId) {
       setAlertMsg("The Customer ID cannot be empty.");
       setShowAlert(true);
     } else {
-      // connect api
       if (!error) {
         setShowAlert(false);
-        navigate("/information");
+        if (selectedOption === COption.AeonId) {
+          setConvertResp(convertId(CConvertType.AeonId, aeonId));
+        } else if (selectedOption === COption.CustomerId) {
+          setConvertResp(convertId(CConvertType.CustomrtId, customerId));
+        }
       } else {
         setAlertMsg("Customer not found (Not register Web Member Service)");
         setShowAlert(true);
       }
     }
   };
+
+  useEffect(() => {
+    if (convertResp.aeonId && convertResp.customerId) {
+      navigate(`/information?aeonid=${convertResp.aeonId}&customerid=${convertResp.customerId}`);
+    }
+  }, [convertResp]);
 
   const alertMessage = () => {
     if (showAlert) {
@@ -69,10 +84,10 @@ const SearchView: React.FC = () => {
   }, [selectedOption]);
 
   return (
-    <div className="h-100 search-view-container bg-color-tertiary d-flex align-items-center">
-      <div className="rounded-4 bg-light w-50 mx-auto overflow-hidden shadow-sm">
-        <div className="bg-color-secondary w-100 py-4 fw-bold fs-5">Please Input AEON ID / Customer Id</div>
-        <div className="p-5 text-start">
+    <div className="h-100 search-view-container fw-bold">
+      <div className="rounded-4 bg-light w-50 mx-auto overflow-hidden search-box">
+        <div className="bg-purple w-100 py-4 fw-bold fs-4 text-white">Please Input<br></br>AEON ID / Customer ID</div>
+        <div className="p-5 text-start my-5">
           {alertMessage()}
           <div>
             <Form>
@@ -81,9 +96,9 @@ const SearchView: React.FC = () => {
                 type="radio"
                 id="aeonIdRadio"
                 name="options"
-                value={COption.AEON_ID}
+                value={COption.AeonId}
                 className="d-flex align-items-center mb-3 w-100"
-                defaultChecked={selectedOption === COption.AEON_ID}
+                defaultChecked={selectedOption === COption.AeonId}
                 onChange={handleRadioChange}
                 label={
                   <Row className="d-flex align-items-center gx-0 ms-3 w-100">
@@ -92,9 +107,9 @@ const SearchView: React.FC = () => {
                     </Col>
                     <Col xs={9}>
                       <Form.Control
-                        type="text"                        
+                        type="text"
                         className="w-100"
-                        disabled={selectedOption !== COption.AEON_ID}
+                        disabled={selectedOption !== COption.AeonId}
                         value={aeonId}
                         onChange={handleAEONIdChange}
                       />
@@ -108,7 +123,7 @@ const SearchView: React.FC = () => {
                 type="radio"
                 id="customerIdRadio"
                 name="options"
-                value={COption.CUSTOMER_ID}
+                value={COption.CustomerId}
                 className="d-flex align-items-center w-100"
                 onChange={handleRadioChange}
                 label={
@@ -118,9 +133,9 @@ const SearchView: React.FC = () => {
                     </Col>
                     <Col xs={9}>
                       <Form.Control
-                        type="text"                        
+                        type="text"
                         className="w-100"
-                        disabled={selectedOption !== COption.CUSTOMER_ID}
+                        disabled={selectedOption !== COption.CustomerId}
                         value={customerId}
                         onChange={handleCustomerIdChange}
                       />
@@ -131,7 +146,7 @@ const SearchView: React.FC = () => {
             </Form>
           </div>
           <div className="mt-5">
-            <Button variant="primary" onClick={handleSearch}>Search</Button>
+            <Button variant="primary" className="purple-btn shadow-sm" onClick={handleSearch}>Search</Button>
           </div>
         </div>
       </div>

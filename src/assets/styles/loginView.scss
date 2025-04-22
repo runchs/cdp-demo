@@ -1,24 +1,65 @@
+@use './variables.scss' as v;
+
+.login-view-container,
+.search-view-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(135deg,
+            #e7e7f3 0%,
+            #aca9d5 40%,
+            #635c89 100%);
+
+    background-blend-mode: overlay;
+}
+
 .login-view-container {
-    .logo-wrp {
-        background-color: #7460cf;
-        img {
-            margin-top: -30px;
-            width: 90%;
+    .login-box {
+        width: 65%;
+        min-width: 900px;
+        max-width: 1200px;
+        height: 65%;
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid #c5c6f0;
+
+
+        .logo-wrp {
+            background-color: #7460cf;
+
+            img {
+                margin-top: -30px;
+                width: 90%;
+            }
+        }
+
+        .form-wrp {
+            max-width: 500px;
+
+            .label-wrp {
+                min-width: 100px;
+            }
+        }
+
+        .eye-icon {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            cursor: pointer;
+            width: 20px;
+            height: 20px;
         }
     }
-    .form-wrp {
-        max-width: 500px;
-        .label-wrp {
-            min-width: 100px;
-        }
-    }
-    .eye-icon {
-        position: absolute;
-        right: 10px;
-        top: 50%;
-        transform: translateY(-50%);
-        cursor: pointer;
-        width: 20px;
-        height: 20px;
+
+}
+
+.search-view-container {
+    .search-box {
+        border-radius: 20px;
+        overflow: hidden;
+        box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        border: 1px solid #c5c6f0;
     }
 }
