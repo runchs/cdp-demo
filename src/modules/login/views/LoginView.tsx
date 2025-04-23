@@ -47,7 +47,7 @@ const LoginView: React.FC = () => {
 
   const alertMessage = () => {
     if (showAlert) {
-      return <Alert variant="danger" className="text-start fw-light mb-4 py-2 px-3">
+      return <Alert variant="danger" className="text-start fw-light mb-4 py-2 px-3 fs-6">
         <div>The username or password cannot be empty.</div>
       </Alert>
     }
@@ -103,7 +103,7 @@ const LoginView: React.FC = () => {
               </Col>
             </Row>
             <div className="text-start mt-5">
-              <Button variant="primary" className="purple-btn fw-bold shadow-sm" onClick={handleLogin}>Sign in</Button>
+              <Button variant="primary" className="purple-btn shadow-sm" onClick={handleLogin}>Sign in</Button>
             </div>
           </div>
         </div>

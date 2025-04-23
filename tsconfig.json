@@ -6,6 +6,10 @@
   ],
   "compilerOptions": {
     "types": ["node"],
-    "lib": ["ESNext", "DOM"]
-  }
+    "lib": ["ESNext", "DOM"],
+    "baseUrl": "src",
+    "paths": {
+      "@axios": ["./src/api/axiosInstance"]
+    }
+  },
 }

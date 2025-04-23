@@ -37,7 +37,6 @@ interface IInfo {
     // card 1
     nameTH: string;
     nameEN: string;
-    cdpId: string;
     nationalID: string;
     status: string;
     level: string;
@@ -86,7 +85,6 @@ const infoMock: IInfo = {
     // card 1
     nameTH: 'รัญชิดา เสน่ห์ภักดี',
     nameEN: 'RUNCHIDA SNEPAKDEE',
-    cdpId: '',
     nationalID: '1234567890000',
     status: 'Sweetheart',
     level: 'Complaint Level: 2',
@@ -173,6 +171,7 @@ const C360Tabs: React.FC = () => {
     const [convertResp, setConvertResp] = useState<IConvertResp>({
         aeonId: '',
         customerId: '',
+        traceId: ''
     });
 
     useEffect(() => {
@@ -187,11 +186,13 @@ const C360Tabs: React.FC = () => {
             const searchParams = new URLSearchParams(location.search);
             const aeonid = searchParams.get('aeonid');
             const customerid = searchParams.get('customerid');
+            const traceId = searchParams.get('traceId');
 
-            if (aeonid && customerid) {
+            if (aeonid && customerid && traceId) {
                 setConvertResp({
                     aeonId: aeonid,
-                    customerId: customerid
+                    customerId: customerid,
+                    traceId: traceId
                 })
             }
         }
@@ -222,12 +223,12 @@ const C360Tabs: React.FC = () => {
                             <div
                                 className="d-flex flex-column promotion-wrp bg-purple-gradient"
                             >
-                                <div className="fw-bold fs-5 text-purple">{item.title}</div>
-                                <div className="fs-7">
+                                <div className="fw-bold text-purple fs-5">{item.title}</div>
+                                <div className="fs-6">
                                     <div className="desc mt-2 mb-4">{item.description}</div>
                                     <div><span className="fw-bold">Periode:</span> {item.periode}</div>
                                     <div><span className="fw-bold">Eligible Card:</span> {item.eligibleCard}</div>
-                                    <Button variant="dark" className="mt-4 fs-7 more-detail-btn shadow-sm" onClick={() => handleOpenModal(item)}>More Detail</Button>
+                                    <Button variant="dark" className="mt-4 fs-6 more-detail-btn shadow-sm" onClick={() => handleOpenModal(item)}>More Detail</Button>
                                 </div>
                             </div>
                         </Carousel.Item>
@@ -272,8 +273,8 @@ const C360Tabs: React.FC = () => {
             >
                 <div>
                     <div className="fs-4 fw-bold mb-3">{selectedPromotion?.title}</div>
-                    <div className="bg-promotion p-3 rounded-3 mb-3 fs-7">{selectedPromotion?.description}</div>
-                    <Row className="bg-promotion p-3 rounded-3 gx-0 fs-7">
+                    <div className="bg-promotion p-3 rounded-3 mb-3 fs-6">{selectedPromotion?.description}</div>
+                    <Row className="bg-promotion p-3 rounded-3 gx-0 fs-6">
                         <Col xs={4}>
                             <div className="fw-bold mb-2">Eligible Card:</div>
                             <div>{selectedPromotion?.eligibleCard}</div>
@@ -311,8 +312,8 @@ const C360Tabs: React.FC = () => {
             {/* card 1 */}
             <Row className="shadow-sm info-top gx-0 bg-purple-gradient">
                 <Col xs={10} className="text-start fw-bold">
-                    <div className="fs-4 text-purple">{infoMock.nameTH} {infoMock.cdpId}</div>
-                    <div className="fs-4 mb-3 text-purple">{infoMock.nameEN} {infoMock.cdpId}</div>
+                    <div className="fs-4 text-purple">{infoMock.nameTH}</div>
+                    <div className="fs-4 mb-3 text-purple">{infoMock.nameEN}</div>
                     <div>National ID: <span className="fw-light">{infoMock.nationalID}</span></div>
                 </Col>
                 <Col xs={2} className="text-start fw-bold text-center">
@@ -325,7 +326,7 @@ const C360Tabs: React.FC = () => {
                 <div className="text-end text-secondary">CDP data update as of <span className="fw-bold">{infoMock.updateDate}</span></div>
                 {/* card 2 */}
                 <div className="rounded-4 bg-light p-4 text-start shadow-sm">
-                    <Row className="fs-5 fw-bold mb-3">
+                    <Row className="fs-4 fw-bold mb-3">
                         <Col xs={4}>Customer Group:</Col>
                         <Col xs={8}>{infoMock.customerGroup}</Col>
                     </Row>
@@ -424,12 +425,12 @@ const C360Tabs: React.FC = () => {
                 </div>
                 {/* card 7 */}
                 <div className="rounded-4 p-4 bg-yellow shadow-sm">
-                    <div className="fw-bold fs-5 pb-2">Suggest Action</div>
+                    <div className="fw-bold fs-4 pb-3">Suggest Action</div>
                     <div>{infoMock.suggestAction}</div>
                 </div>
                 {/* card 8 */}
                 <div className="rounded-4 bg-light p-4 shadow-sm">
-                    <div className="fw-bold fs-5 pb-2">Payment Status: <span className="text-success">{infoMock.paymentStatus}</span></div>
+                    <div className="fw-bold fs-5 pb-3">Payment Status: <span className="text-success">{infoMock.paymentStatus}</span></div>
                     <div className="d-flex justify-content-center">
                         <div className="me-5"><span className="fw-bold me-3">Day Past Due: </span >{infoMock.dayPastDue} days</div>
                         <div className="ms-5"><span className="fw-bold me-3">Last Overdue Date: </span >{infoMock.lastOverDueDate || '-'}</div>
@@ -447,7 +448,7 @@ const C360Tabs: React.FC = () => {
                     {/* card 10 */}
                     <Col xs={8} className="bg-white ps-4">
                         <div className="rounded-4 bg-light py-4 px-5 text-start shadow-sm">
-                            <div className="fw-bold fs-5 pb-2">Suggested Promotions</div>
+                            <div className="fw-bold fs-5 pb-4">Suggested Promotions</div>
                             <div>
                                 {suggestPromotions()}
                             </div>

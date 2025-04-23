@@ -24,6 +24,7 @@ const SearchView: React.FC = () => {
   const [convertResp, setConvertResp] = useState<IConvertResp>({
     aeonId: '',
     customerId: '',
+    traceId: ''
   });
 
   const [error, setError] = useState<boolean>(false); // mock for test
@@ -66,13 +67,13 @@ const SearchView: React.FC = () => {
 
   useEffect(() => {
     if (convertResp.aeonId && convertResp.customerId) {
-      navigate(`/information?aeonid=${convertResp.aeonId}&customerid=${convertResp.customerId}`);
+      navigate(`/information?aeonid=${convertResp.aeonId}&customerid=${convertResp.customerId}&traceId=${convertResp.traceId}`);
     }
   }, [convertResp]);
 
   const alertMessage = () => {
     if (showAlert) {
-      return <Alert variant="danger" className="text-start fw-light mb-4 py-2 px-3">
+      return <Alert variant="danger" className="text-start fw-light mb-4 py-2 px-3 fs-6">
         <div>{alertMsg}</div>
       </Alert>
     }
@@ -86,7 +87,7 @@ const SearchView: React.FC = () => {
   return (
     <div className="h-100 search-view-container fw-bold">
       <div className="rounded-4 bg-light w-50 mx-auto overflow-hidden search-box">
-        <div className="bg-purple w-100 py-4 fw-bold fs-4 text-white">Please Input<br></br>AEON ID / Customer ID</div>
+        <div className="bg-purple w-100 py-4 fw-bold fs-5 text-white">Please Input<br></br>AEON ID / Customer ID</div>
         <div className="p-5 text-start my-5">
           {alertMessage()}
           <div>

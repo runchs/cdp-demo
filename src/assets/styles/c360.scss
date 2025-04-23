@@ -5,7 +5,7 @@
 }
 
 .promotion-wrp {
-    min-height: 325px;
+    min-height: 350px;
     color: #000;
     padding: 5% 12%;
     background: linear-gradient(to bottom, #e3e5fb 0%, #bfbfe9 100%);
@@ -21,7 +21,7 @@
     .more-detail-btn {
         background-color: #fff;
         color: v.$purple-dark;
-        border-radius: 20px;
+        border-radius: 20px !important;
         border: 1px solid v.$purple-dark;
 
         &:hover {

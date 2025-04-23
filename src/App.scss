@@ -1,6 +1,7 @@
 @use "./assets/styles/loginView.scss";
 @use "./assets/styles/customTabs.scss";
 @use "./assets/styles/c360.scss";
+@use "./assets/styles/baseModal.scss";
 @use './assets/styles/variables.scss' as v;
 
 @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
@@ -9,6 +10,7 @@
 	text-align: center;
 	font-family: 'Sarabun', sans-serif;
 	height: 100vh;
+	font-size: 1.1rem;
 }
 
 // font
@@ -96,7 +98,6 @@
 .purple-btn {
 	background-color: v.$purple-primary !important;
 	color: #fff !important;
-	border-radius: 10px !important;
 	border: none !important;
 	width: 100px !important;
 	height: 40px !important;
@@ -104,6 +105,11 @@
 	&:hover {
 		background-color: v.$purple-dark !important;
 	}
+}
+
+button {
+	border-radius: 10px !important;
+	font-size: 1.1rem !important;
 }
 
 // modal

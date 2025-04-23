@@ -1,3 +1,6 @@
+import axios from '@axios';
+import { useEffect, useState } from "react";
+
 export enum CConvertType {
     AeonId = 1,
     CustomrtId
@@ -6,11 +9,13 @@ export enum CConvertType {
 export interface IConvertResp {
     aeonId: string;
     customerId: string;
+    traceId: string;
 }
 
 let convertResp = <IConvertResp>{
     aeonId: '',
-    customerId: ''
+    customerId: '',
+    traceId: ''
 }
 
 export const convertId = (type: CConvertType, value: string) => {
@@ -25,12 +30,30 @@ export const convertId = (type: CConvertType, value: string) => {
 
 const convertAeonId = (id: string) => {
     // connect api convert aeon id
-    convertResp.aeonId = 'Ab1234';
-    convertResp.customerId = 'Cd5678';
+    axios.get('/convert/aeonid', { params: { aeon_id: 'qlAHWb7BCO4oDkf4qAGi', user: 'test' } })
+        .then((response: any) => {
+            const resp = response.data;
+
+            convertResp.aeonId = resp.aeon_id;
+            convertResp.customerId = resp.cust_id;
+            convertResp.traceId = resp.trace_id;
+        })
+        .catch((error: any) => {
+            console.error("เกิดข้อผิดพลาด:", error);
+        });
 }
 
 const convertCustomerId = (id: string) => {
     // connect api convert customer id
-    convertResp.aeonId = 'Wx1234';
-    convertResp.customerId = 'Yz5678';
+    axios.get('/convert/custid', { params: { cust_id: '1100400132335', user: 'test' } })
+        .then((response: any) => {
+            const resp = response.data;
+
+            convertResp.aeonId = resp.aeon_id;
+            convertResp.customerId = resp.cust_id;
+            convertResp.traceId = resp.trace_id;
+        })
+        .catch((error: any) => {
+            console.error("เกิดข้อผิดพลาด:", error);
+        });
 }
