@@ -14,8 +14,16 @@
 }
 
 // font
+.f-saraban {
+	font-family: 'Sarabun', sans-serif;
+}
+
 .fs-7 {
 	font-size: 0.85rem !important;
+}
+
+.fs-8 {
+	font-size: 0.7rem !important;
 }
 
 // color
@@ -32,12 +40,10 @@
 }
 
 .bg-purple-gradient {
-	background: linear-gradient(
-    to bottom,
-    #e3e5fb 0%,
-    #cccdef 50%,
-    #b3b3de 100%
-  );
+	background: linear-gradient(to bottom,
+			#e3e5fb 0%,
+			#cccdef 50%,
+			#b3b3de 100%);
 }
 
 .text-purple {
@@ -46,6 +52,10 @@
 
 .bg-yellow {
 	background-color: v.$yellow-primary;
+}
+
+.bg-yellow-light {
+	background-color: v.$yellow-light;
 }
 
 .bg-yellow-gradient {

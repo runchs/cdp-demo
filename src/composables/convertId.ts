@@ -1,59 +1,66 @@
 import axios from '@axios';
-import { useEffect, useState } from "react";
+import { useState } from 'react';
 
 export enum CConvertType {
     AeonId = 1,
     CustomrtId
 }
 
-export interface IConvertResp {
+export interface IconvertInfo {
     aeonId: string;
     customerId: string;
     traceId: string;
+    user?: string;
 }
 
-let convertResp = <IConvertResp>{
+const convertInfo = <IconvertInfo>{
     aeonId: '',
     customerId: '',
-    traceId: ''
+    traceId: '',
 }
 
-export const convertId = (type: CConvertType, value: string) => {
+export const convertId = (type: CConvertType, value: string, user?: string) => {
     if (type === CConvertType.AeonId) {
-        convertAeonId(value);
+        convertAeonId(value, user);
     } else {
-        convertCustomerId(value);
+        convertCustomerId(value, user);
     }
 
-    return convertResp;
+    return convertInfo;
 }
 
-const convertAeonId = (id: string) => {
+const convertAeonId = (id: string, user?: string) => {
     // connect api convert aeon id
-    axios.get('/convert/aeonid', { params: { aeon_id: 'qlAHWb7BCO4oDkf4qAGi', user: 'test' } })
+    axios.get('/convert/aeonid', { params: { aeon_id: id, user: user } })
         .then((response: any) => {
             const resp = response.data;
 
-            convertResp.aeonId = resp.aeon_id;
-            convertResp.customerId = resp.cust_id;
-            convertResp.traceId = resp.trace_id;
+            convertInfo.aeonId = resp.aeon_id;
+            convertInfo.customerId = resp.cust_id;
+            convertInfo.traceId = resp.trace_id;
         })
         .catch((error: any) => {
             console.error("เกิดข้อผิดพลาด:", error);
+        })
+        .finally(() => {
+
         });
 }
 
-const convertCustomerId = (id: string) => {
+const convertCustomerId = (id: string, user?: string) => {
     // connect api convert customer id
-    axios.get('/convert/custid', { params: { cust_id: '1100400132335', user: 'test' } })
+    axios.get('/convert/custid', { params: { cust_id: id, user: user } })
         .then((response: any) => {
             const resp = response.data;
 
-            convertResp.aeonId = resp.aeon_id;
-            convertResp.customerId = resp.cust_id;
-            convertResp.traceId = resp.trace_id;
+            convertInfo.aeonId = resp.aeon_id;
+            convertInfo.customerId = resp.cust_id;
+            convertInfo.traceId = resp.trace_id;
         })
         .catch((error: any) => {
             console.error("เกิดข้อผิดพลาด:", error);
+        })
+        .finally(() => {
+
         });
 }

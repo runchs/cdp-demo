@@ -4,7 +4,7 @@ import { Row, Col } from "react-bootstrap";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
-import { convertId, CConvertType, IConvertResp } from '@/composables/convertId'
+import { convertId, CConvertType, IconvertInfo } from '@/composables/convertId'
 
 enum COption {
   AeonId = '1',
@@ -21,10 +21,11 @@ const SearchView: React.FC = () => {
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMsg, setAlertMsg] = useState<string>("");
 
-  const [convertResp, setConvertResp] = useState<IConvertResp>({
+  const [convertInfo, setconvertInfo] = useState<IconvertInfo>({
     aeonId: '',
     customerId: '',
-    traceId: ''
+    traceId: '',
+    user: ''
   });
 
   const [error, setError] = useState<boolean>(false); // mock for test
@@ -54,9 +55,9 @@ const SearchView: React.FC = () => {
       if (!error) {
         setShowAlert(false);
         if (selectedOption === COption.AeonId) {
-          setConvertResp(convertId(CConvertType.AeonId, aeonId));
+          setconvertInfo(convertId(CConvertType.AeonId, aeonId));
         } else if (selectedOption === COption.CustomerId) {
-          setConvertResp(convertId(CConvertType.CustomrtId, customerId));
+          setconvertInfo(convertId(CConvertType.CustomrtId, customerId));
         }
       } else {
         setAlertMsg("Customer not found (Not register Web Member Service)");
@@ -65,12 +66,6 @@ const SearchView: React.FC = () => {
     }
   };
 
-  useEffect(() => {
-    if (convertResp.aeonId && convertResp.customerId) {
-      navigate(`/information?aeonid=${convertResp.aeonId}&customerid=${convertResp.customerId}&traceId=${convertResp.traceId}`);
-    }
-  }, [convertResp]);
-
   const alertMessage = () => {
     if (showAlert) {
       return <Alert variant="danger" className="text-start fw-light mb-4 py-2 px-3 fs-6">
@@ -78,6 +73,12 @@ const SearchView: React.FC = () => {
       </Alert>
     }
   }
+
+  useEffect(() => {
+    if (convertInfo.aeonId && convertInfo.customerId) {
+      navigate(`/information?aeonid=${convertInfo.aeonId}&customerid=${convertInfo.customerId}&traceId=${convertInfo.traceId}`);
+    }
+  }, [convertInfo]);
 
   useEffect(() => {
     setAEONId("");

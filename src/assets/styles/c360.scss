@@ -1,36 +1,54 @@
 @use './variables.scss' as v;
 
-.info-top {
-    padding: 3rem 5rem;
-}
-
-.promotion-wrp {
-    min-height: 350px;
-    color: #000;
-    padding: 5% 12%;
-    background: linear-gradient(to bottom, #e3e5fb 0%, #bfbfe9 100%);
-
-    .desc {
-        display: -webkit-box;
-        -webkit-line-clamp: 3;
-        -webkit-box-orient: vertical;
-        overflow: hidden;
-        text-overflow: ellipsis;
+.c360-wrp {
+    .info-top {
+        padding: 3rem 5rem;
+        min-height: 210px;
     }
+    
+    .promotion-wrp {
+        min-height: 370px;
+        color: #000;
+        padding: 35px 12%;
+        background: linear-gradient(to bottom, #e3e5fb 0%, #bfbfe9 100%);
 
-    .more-detail-btn {
-        background-color: #fff;
-        color: v.$purple-dark;
-        border-radius: 20px !important;
-        border: 1px solid v.$purple-dark;
+        .name,
+        .desc {
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
 
-        &:hover {
-            background-color: v.$purple-dark;
+        .name {
+            -webkit-line-clamp: 1;
+            max-height: 30px;
+        }
+    
+        .desc {
+            -webkit-line-clamp: 3;
+        }
+    
+        .more-detail-btn {
+            background-color: #fff;
+            color: v.$purple-dark;
+            border-radius: 20px !important;
+            border: 1px solid v.$purple-dark;
+    
+            &:hover {
+                background-color: v.$purple-dark;
+                color: #fff;
+            }
         }
     }
+    
+    .carousel-control-prev,
+    .carousel-control-next {
+        width: 10% !important;
+    }
 }
 
-.carousel-control-prev,
-.carousel-control-next {
-    width: 10% !important;
+.promotion-desc {
+    max-height: 200px;
+    overflow-y: auto;
 }

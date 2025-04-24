@@ -27,9 +27,9 @@ function BaseModal({
             size="lg"
             aria-labelledby="contained-modal-title-vcenter"
             centered
-            className="rounded-4"
+            className="rounded-4 f-saraban"
         >
-            <Modal.Header closeButton className="px-5 bg-purple-light">
+            <Modal.Header closeButton className="px-5">
                 <Modal.Title id="contained-modal-title-vcenter" className="fs-5">{title}</Modal.Title>
             </Modal.Header>
             <Modal.Body className="px-5">
