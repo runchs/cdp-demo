@@ -22,3 +22,11 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# ไม่อัพ .env ของจริง
+# .env
+# .env.sit
+# .env.prod
+
+# 👇 ยกเว้น .env.example
+# !.env.example

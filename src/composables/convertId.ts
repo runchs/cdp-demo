@@ -31,20 +31,20 @@ export const convertId = (type: CConvertType, value: string, user?: string) => {
 
 const convertAeonId = (id: string, user?: string) => {
     // connect api convert aeon id
-    axios.get('/convert/aeonid', { params: { aeon_id: id, user: user } })
-        .then((response: any) => {
-            const resp = response.data;
+    // axios.get('/convert/aeonid', { params: { aeon_id: id, user: user } })
+    //     .then((response: any) => {
+    //         const resp = response.data;
 
-            convertInfo.aeonId = resp.aeon_id;
-            convertInfo.customerId = resp.cust_id;
-            convertInfo.traceId = resp.trace_id;
-        })
-        .catch((error: any) => {
-            console.error("เกิดข้อผิดพลาด:", error);
-        })
-        .finally(() => {
+    //         convertInfo.aeonId = resp.aeon_id;
+    //         convertInfo.customerId = resp.cust_id;
+    //         convertInfo.traceId = resp.trace_id;
+    //     })
+    //     .catch((error: any) => {
+    //         console.error("เกิดข้อผิดพลาด:", error);
+    //     })
+    //     .finally(() => {
 
-        });
+    //     });
 }
 
 const convertCustomerId = (id: string, user?: string) => {

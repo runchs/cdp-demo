@@ -26,7 +26,7 @@
 	font-size: 0.7rem !important;
 }
 
-// color
+// color purple
 .bg-purple {
 	background-color: v.$purple-primary;
 }
@@ -50,6 +50,7 @@
 	color: v.$purple-dark;
 }
 
+// color yellow
 .bg-yellow {
 	background-color: v.$yellow-primary;
 }
@@ -64,6 +65,33 @@
 
 .text-yellow {
 	color: v.$yellow-primary;
+}
+
+// color red
+.bg-red {
+	background-color: v.$red-primary;
+}
+
+.text-red {
+	color: v.$red-primary;
+}
+
+// color orange
+.bg-orange {
+	background-color: v.$orange-primary;
+}
+
+.text-orange {
+	color: v.$orange-primary;
+}
+
+// color green
+.bg-green {
+	background-color: v.$green-primary;
+}
+
+.text-green {
+	color: v.$green-primary;
 }
 
 // input

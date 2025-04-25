@@ -1,7 +1,10 @@
 import axios from 'axios';
+import { getEnv } from '@/env';
+
+const { apiUrl } = getEnv();
 
 const baseAPI = axios.create({
-    baseURL: 'https://9a3b9f22-1749-42b7-b3d3-8bf03f6901d7.mock.pstmn.io',
+    baseURL: apiUrl,
     headers: {
         'Content-Type': 'application/json',
     },
