@@ -13,6 +13,9 @@ import BaseModal from "@/components/modals/BaseModal";
 // composable
 import { convertId, CConvertType, IconvertInfo } from '@/composables/convertId'
 
+// context
+import { useLoader } from '@/contexts/LoaderContext';
+
 // api
 import axios from '@axios';
 
@@ -80,6 +83,12 @@ interface IInfo {
     suggestPromotions: IPromotion[]
 }
 
+interface IError {
+    ConvertID: boolean;
+    CDP: boolean;
+    SystemI: boolean;
+}
+
 const offerResultOptions = [
     { label: "Acknowledged", value: "Acknowledged" },
     { label: "Interested", value: "Interested" },
@@ -91,7 +100,13 @@ const C360Tabs: React.FC = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
-    const [error, setError] = useState(true); // mock for test
+    const { setIsLoading, isLoading } = useLoader();
+
+    const [error, setError] = useState<IError>({
+        ConvertID: false,
+        CDP: false,
+        SystemI: false,
+    })
 
     const convertInfo = useRef<IconvertInfo>({
         aeonId: '',
@@ -181,23 +196,24 @@ const C360Tabs: React.FC = () => {
     }
 
     const getCustomerInfo = () => {
-        // axios.get('/dashboard/custinfo', {
-        //     headers: {
-        //         'Trace-ID': convertInfo.current.traceId
-        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        // })
-        //     .then((response: any) => {
-        //         const resp = response.data;
+        setIsLoading(true);
+        axios.get('/dashboard/custinfo', {
+            headers: {
+                'Trace-ID': convertInfo.current.traceId
+            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
+        })
+            .then((response: any) => {
+                const resp = response.data;
 
         // mock data for test
-        const resp = {
-            "national_id": "1100800391079",
-            "customer_name_eng": "MEENA TESTCDP",
-            "customer_name_th": "มีนา TESTCDP",
-            "mobile_no": "0982757360",
-            "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
-            "mail_to": "Home"
-        }
+        // const resp = {
+        //     "national_id": "1100800391079",
+        //     "customer_name_eng": "MEENA TESTCDP",
+        //     "customer_name_th": "มีนา TESTCDP",
+        //     "mobile_no": "0982757360",
+        //     "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
+        //     "mail_to": "Home"
+        // }
 
         setInfo(prev => ({
             ...prev,
@@ -208,13 +224,13 @@ const C360Tabs: React.FC = () => {
             mailTo: resp.mail_to,
             address: resp.mail_to_address,
         }));
-        // })
-        // .catch((error: any) => {
-        //     console.error("เกิดข้อผิดพลาด:", error);
-        // })
-        // .finally(() => {
-
-        // });
+        })
+        .catch((error: any) => {
+            console.error("เกิดข้อผิดพลาด:", error);
+        })
+        .finally(() => {
+            setIsLoading(false);
+        });
     }
 
     const getCustomerSegment = () => {
@@ -622,170 +638,187 @@ const C360Tabs: React.FC = () => {
         }
     };
 
+    const handleErrMsg = () => {
+        switch (true) {
+            case error.ConvertID:
+                return 'Customer not found';
+            case error.CDP:
+                return 'Customer not found from CDP';
+            case error.SystemI:
+                return 'Not found data from System-i';
+            default:
+                return 'Customer not found';
+        }
+    }
+
 
     return (
-        error ? (
-            <div className="p-4 d-flex justify-content-center align-items-center h-100">
-                {/* <Alert variant="danger" className="text-start fw-light mb-4 py-2 px-3 fs-6">
-                    <div>AEON ID not found.</div>
-                </Alert> */}
-                <div></div>
-                <div className="text-muted">AEON ID not found.</div>
-            </div>
-        ) : (
-            <div className="bg-whit c360-wrp">
-                {/* card 1 */}
-                <Row className="shadow-sm info-top gx-0 bg-purple-gradient">
-                    <Col xs={10} className="text-start fw-bold">
-                        <div className="fs-4 text-purple">{info.nameTH}</div>
-                        <div className="fs-4 mb-3 text-purple">{info.nameEN}</div>
-                        <div>National ID: <span className="fw-light">{info.nationalID}</span></div>
-                    </Col>
-                    <Col xs={2} className="text-start fw-bold text-center">
-                        <div className="mb-2">{info.sweetheart}</div>
-                        <div className={`d-inline-block rounded-4 text-light px-4 py-2 shadow-sm w-100 ${getComplaintLevelColor(info.complaintLevel)}`}>
-                            {info.complaintLevel || '-'}
-                        </div>
-                    </Col>
-                </Row>
-                <div className="p-5 d-flex flex-column gap-4">
-                    {/* update date */}
-                    <div className="text-end text-secondary">CDP data update as of <span className="fw-bold">{info.updateDate}</span></div>
-                    {/* card 2 */}
-                    <div className="rounded-4 bg-light p-4 text-start shadow-sm">
-                        <Row className="fs-4 fw-bold mb-3">
-                            <Col xs={4}>Customer Group:</Col>
-                            <Col xs={8}>{handleCustomerGroup(info.customerGroup)}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Complaint Group:</Col>
-                            <Col xs={8}>{info.complaintGroup}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Customer Type:</Col>
-                            <Col xs={8}>{info.customerType}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Member Status:</Col>
-                            <Col xs={8}>{info.memberStatus}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Customer Segment:</Col>
-                            <Col xs={8}>{info.customerSegment}</Col>
-                        </Row>
-                    </div>
-                    {/* card 3 */}
-                    <div className="rounded-4 bg-light p-4 text-start shadow-sm">
-                        <Row>
-                            <Col xs={4} className="fw-bold">Phone No.:</Col>
-                            <Col xs={8}>{info.mobileNo} ({info.mobileNoDesc})</Col>
-                        </Row>
-                        {
-                            (location.pathname === '/c360') && (<Row>
-                                <Col xs={4} className="fw-bold">Calling phone:</Col>
-                                <Col xs={8} className={`${getCallingPhoneColor(info.mobileNo)}`}>value7</Col>
-                            </Row>)
-                        }
-                        <Row>
-                            <Col xs={4} className="fw-bold">Mail-to-{info.mailTo}:</Col>
-                            <Col xs={8}>{info.address}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Gender:</Col>
-                            <Col xs={8}>{info.gender}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Marital Status:</Col>
-                            <Col xs={8}>{info.MaritalStatus}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Type of Job:</Col>
-                            <Col xs={8}>{info.typeOfJob}</Col>
-                        </Row>
-                    </div>
-                    {/* card 4 */}
-                    <div className="rounded-4 bg-light p-4 text-start shadow-sm">
-                        <Row>
-                            <Col xs={4} className="fw-bold">Statement Channel:</Col>
-                            <Col xs={8}>{info.statementChannel}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Last e-statement sent date:</Col>
-                            <Col xs={8}>{info.lastStatementSentDate}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">E-statement sent status:</Col>
-                            <Col xs={8}>{info.statementSentStatus}</Col>
-                        </Row>
-                    </div>
-                    {/* card 5 */}
-                    <div className="rounded-4 bg-light p-4 text-start shadow-sm">
-                        <Row>
-                            <Col xs={4} className="fw-bold">Last Increase limit Update:</Col>
-                            <Col xs={8}>{info.lastIncreaseLimit}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Last Reduce limit Update:</Col>
-                            <Col xs={8}>{info.lastReduceLimit}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Last Income Update:</Col>
-                            <Col xs={8}>{info.lastIncome}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Last Card Apply Date:</Col>
-                            <Col xs={8}>{info.lastCardApply}</Col>
-                        </Row>
-                    </div>
-                    {/* card 6 */}
-                    <div className="rounded-4 bg-light p-4 text-start shadow-sm">
-                        <Row>
-                            <Col xs={4} className="fw-bold">Consent for collect & use:</Col>
-                            <Col xs={8}>{info.consentForCollect}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Consent for disclose:</Col>
-                            <Col xs={8}>{info.consentForDisclose}</Col>
-                        </Row>
-                        <Row>
-                            <Col xs={4} className="fw-bold">Blocked Media:</Col>
-                            <Col xs={8}>{info.blockedMedia}</Col>
-                        </Row>
-                    </div>
-                    {/* card 7 */}
-                    <div className="rounded-4 p-4 bg-yellow shadow-sm">
-                        <div className="fw-bold fs-4 pb-3">Suggest Action</div>
-                        <div>{info.suggestAction}</div>
-                    </div>
-                    {/* card 8 */}
-                    <div className="rounded-4 bg-light p-4 shadow-sm">
-                        <div className="fw-bold fs-5 pb-3">Payment Status: <span className={`${getPaymentStatusColor(info.paymentStatus)}`}>{info.paymentStatus}</span></div>
-                        <div className="d-flex justify-content-center">
-                            <div className="me-5"><span className="fw-bold me-3">Day Past Due: </span >{info.dayPastDue} days</div>
-                            <div className="ms-5"><span className="fw-bold me-3">Last Overdue Date: </span >{info.lastOverDueDate || '-'}</div>
-                        </div>
-                    </div>
-                    {/* card 9, 10 */}
-                    <Row className=" gx-0">
-                        {/* card 9*/}
-                        <Col xs={4} className="rounded-4 bg-light py-4 px-5 text-start shadow-sm">
-                            <div className="fw-bold fs-5 pb-4">Suggested Cards</div>
-                            <div>
-                                {suggestCards()}
-                            </div>
+        <div className="bg-whit c360-wrp">
+            {/* error msg */}
+            {(error.ConvertID || error.CDP || error.SystemI) && (
+                <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
+                    <div>{handleErrMsg()} (Trace ID: {convertInfo.current.traceId}).</div>
+                </Alert>
+            )}
+
+            {/* card 1 */}
+            {!error.ConvertID && (
+                <div>
+                    <Row className="shadow-sm info-top gx-0 bg-purple-gradient">
+                        <Col xs={10} className="text-start fw-bold">
+                            <div className="fs-4 text-purple">{info.nameTH}</div>
+                            <div className="fs-4 mb-3 text-purple">{info.nameEN}</div>
+                            <div>National ID: <span className="fw-light">{info.nationalID}</span></div>
                         </Col>
-                        {/* card 10 */}
-                        <Col xs={8} className="bg-white ps-4">
-                            <div className="rounded-4 bg-light py-4 px-5 text-start shadow-sm">
-                                <div className="fw-bold fs-5 pb-4">Suggested Promotions</div>
-                                <div>
-                                    {suggestPromotions()}
-                                </div>
+                        <Col xs={2} className="text-start fw-bold text-center">
+                            <div className="mb-2">{info.sweetheart}</div>
+                            <div className={`d-inline-block rounded-4 text-light px-4 py-2 shadow-sm w-100 ${getComplaintLevelColor(info.complaintLevel)}`}>
+                                {info.complaintLevel || '-'}
                             </div>
                         </Col>
                     </Row>
+                    <div className="px-5 py-4 d-flex flex-column gap-3">
+
+                        {/* update date */}
+                        <div className="text-end text-secondary">CDP data update as of <span className="fw-bold">{info.updateDate}</span></div>
+                        {/* card 2 */}
+                        <div className="rounded-4 bg-light p-4 text-start shadow-sm">
+                            <Row className="fs-4 fw-bold mb-3">
+                                <Col xs={4}>Customer Group:</Col>
+                                <Col xs={8}>{handleCustomerGroup(info.customerGroup)}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Complaint Group:</Col>
+                                <Col xs={8}>{info.complaintGroup}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Customer Type:</Col>
+                                <Col xs={8}>{info.customerType}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Member Status:</Col>
+                                <Col xs={8}>{info.memberStatus}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Customer Segment:</Col>
+                                <Col xs={8}>{info.customerSegment}</Col>
+                            </Row>
+                        </div>
+                        {/* card 3 */}
+                        <div className="rounded-4 bg-light p-4 text-start shadow-sm">
+                            <Row>
+                                <Col xs={4} className="fw-bold">Phone No.:</Col>
+                                <Col xs={8}>{info.mobileNo} ({info.mobileNoDesc})</Col>
+                            </Row>
+                            {
+                                (location.pathname === '/c360') && (<Row>
+                                    <Col xs={4} className="fw-bold">Calling phone:</Col>
+                                    <Col xs={8} className={`${getCallingPhoneColor(info.mobileNo)}`}>value7</Col>
+                                </Row>)
+                            }
+                            <Row>
+                                <Col xs={4} className="fw-bold">Mail-to-{info.mailTo}:</Col>
+                                <Col xs={8}>{info.address}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Gender:</Col>
+                                <Col xs={8}>{info.gender}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Marital Status:</Col>
+                                <Col xs={8}>{info.MaritalStatus}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Type of Job:</Col>
+                                <Col xs={8}>{info.typeOfJob}</Col>
+                            </Row>
+                        </div>
+                        {/* card 4 */}
+                        <div className="rounded-4 bg-light p-4 text-start shadow-sm">
+                            <Row>
+                                <Col xs={4} className="fw-bold">Statement Channel:</Col>
+                                <Col xs={8}>{info.statementChannel}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Last e-statement sent date:</Col>
+                                <Col xs={8}>{info.lastStatementSentDate}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">E-statement sent status:</Col>
+                                <Col xs={8}>{info.statementSentStatus}</Col>
+                            </Row>
+                        </div>
+                        {/* card 5 */}
+                        <div className="rounded-4 bg-light p-4 text-start shadow-sm">
+                            <Row>
+                                <Col xs={4} className="fw-bold">Last Increase limit Update:</Col>
+                                <Col xs={8}>{info.lastIncreaseLimit}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Last Reduce limit Update:</Col>
+                                <Col xs={8}>{info.lastReduceLimit}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Last Income Update:</Col>
+                                <Col xs={8}>{info.lastIncome}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Last Card Apply Date:</Col>
+                                <Col xs={8}>{info.lastCardApply}</Col>
+                            </Row>
+                        </div>
+                        {/* card 6 */}
+                        <div className="rounded-4 bg-light p-4 text-start shadow-sm">
+                            <Row>
+                                <Col xs={4} className="fw-bold">Consent for collect & use:</Col>
+                                <Col xs={8}>{info.consentForCollect}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Consent for disclose:</Col>
+                                <Col xs={8}>{info.consentForDisclose}</Col>
+                            </Row>
+                            <Row>
+                                <Col xs={4} className="fw-bold">Blocked Media:</Col>
+                                <Col xs={8}>{info.blockedMedia}</Col>
+                            </Row>
+                        </div>
+                        {/* card 7 */}
+                        <div className="rounded-4 p-4 bg-yellow shadow-sm">
+                            <div className="fw-bold fs-4 pb-3">Suggest Action</div>
+                            <div>{info.suggestAction}</div>
+                        </div>
+                        {/* card 8 */}
+                        <div className="rounded-4 bg-light p-4 shadow-sm">
+                            <div className="fw-bold fs-5 pb-3">Payment Status: <span className={`${getPaymentStatusColor(info.paymentStatus)}`}>{info.paymentStatus}</span></div>
+                            <div className="d-flex justify-content-center">
+                                <div className="me-5"><span className="fw-bold me-3">Day Past Due: </span >{info.dayPastDue} days</div>
+                                <div className="ms-5"><span className="fw-bold me-3">Last Overdue Date: </span >{info.lastOverDueDate || '-'}</div>
+                            </div>
+                        </div>
+                        {/* card 9, 10 */}
+                        <Row className=" gx-0">
+                            {/* card 9*/}
+                            <Col xs={4} className="rounded-4 bg-light py-4 px-5 text-start shadow-sm">
+                                <div className="fw-bold fs-5 pb-4">Suggested Cards</div>
+                                <div>
+                                    {suggestCards()}
+                                </div>
+                            </Col>
+                            {/* card 10 */}
+                            <Col xs={8} className="bg-white ps-3">
+                                <div className="rounded-4 bg-light py-4 px-5 text-start shadow-sm">
+                                    <div className="fw-bold fs-5 pb-4">Suggested Promotions</div>
+                                    <div>
+                                        {suggestPromotions()}
+                                    </div>
+                                </div>
+                            </Col>
+                        </Row>
+                    </div>
                 </div>
-            </div>)
+            )}
+
+        </div>
     );
 };
 

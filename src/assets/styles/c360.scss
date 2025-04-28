@@ -2,10 +2,10 @@
 
 .c360-wrp {
     .info-top {
-        padding: 3rem 5rem;
-        min-height: 210px;
+        padding: 1.8rem 5rem;
+        min-height: 170px;
     }
-    
+
     .promotion-wrp {
         min-height: 400px;
         color: #000;
@@ -24,24 +24,24 @@
             -webkit-line-clamp: 1;
             max-height: 30px;
         }
-    
+
         .desc {
             -webkit-line-clamp: 3;
         }
-    
+
         .more-detail-btn {
             background-color: #fff;
             color: v.$purple-dark;
             border-radius: 20px !important;
             border: 1px solid v.$purple-dark;
-    
+
             &:hover {
                 background-color: v.$purple-dark;
                 color: #fff;
             }
         }
     }
-    
+
     .carousel-control-prev,
     .carousel-control-next {
         width: 10% !important;

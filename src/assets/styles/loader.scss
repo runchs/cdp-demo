@@ -1,0 +1,18 @@
+@use './variables.scss' as v;
+
+.loader-wrp {}
+
+.modal-dialog {
+    width: 150px !important;
+
+    .modal-content {
+        background: transparent !important;
+        border: none !important;
+    }
+}
+
+.spinner-border {
+    width: 60px !important;
+    height: 60px !important;
+    border-width: 8px !important;
+}
