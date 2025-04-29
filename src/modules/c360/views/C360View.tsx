@@ -652,7 +652,7 @@ const C360Tabs: React.FC = () => {
     }
 
 
-    return (
+    return !isLoading ? (
         <div className="bg-whit c360-wrp">
             {/* error msg */}
             {(error.ConvertID || error.CDP || error.SystemI) && (
@@ -819,7 +819,7 @@ const C360Tabs: React.FC = () => {
             )}
 
         </div>
-    );
+    ) : null;
 };
 
 export default C360Tabs;
