@@ -1,20 +1,11 @@
-import { defineConfig, loadEnv } from 'vite';
+import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import path from 'path';
 
-export default defineConfig(({ mode }) => {
+export default defineConfig(() => {
   const root = process.cwd();
-  const env = loadEnv(mode, path.resolve(root, 'config'), '');
-
-  console.log('mode', mode)
-
-  const defineEnv = Object.keys(env).reduce((prev, key) => {
-    prev[`import.meta.env.${key}`] = JSON.stringify(env[key]);
-    return prev;
-  }, {} as Record<string, string>);
 
   return {
-    define: defineEnv,
     plugins: [react()],
     resolve: {
       alias: {
