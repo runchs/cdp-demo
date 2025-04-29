@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "lint": "eslint .",
-    "dev": "vite --mode sit",
-    "build": "tsc -b && vite build --mode sit",
-    "preview": "vite preview --mode sit",
+    "sit": "vite --mode sit",
+    "build:sit": "tsc -b && vite build --mode sit",
+    "preview:sit": "vite preview --mode sit",
     "prod": "vite --mode prod",
     "build:prod": "tsc -b && vite build --mode prod",
     "preview:prod": "vite preview --mode prod"

@@ -3,19 +3,23 @@ import react from '@vitejs/plugin-react';
 import path from 'path';
 
 export default defineConfig(({ mode }) => {
-  const env = loadEnv(mode, path.resolve(__dirname, 'config'), '');
+  const root = process.cwd();
+  const env = loadEnv(mode, path.resolve(root, 'config'), '');
+
+  console.log('mode', mode)
+
+  const defineEnv = Object.keys(env).reduce((prev, key) => {
+    prev[`import.meta.env.${key}`] = JSON.stringify(env[key]);
+    return prev;
+  }, {} as Record<string, string>);
 
   return {
-    define: {
-      'import.meta.env.VITE_API_URL': JSON.stringify(env.VITE_API_URL),
-      'import.meta.env.VITE_APP_NAME': JSON.stringify(env.VITE_APP_NAME),
-      'import.meta.env.VITE_MODE': JSON.stringify(env.VITE_MODE),
-    },
+    define: defineEnv,
     plugins: [react()],
     resolve: {
       alias: {
-        '@': path.resolve(__dirname, 'src'),
-        '@axios': path.resolve(__dirname, './src/api/axiosInstance'),
+        '@': path.resolve(root, 'src'),
+        '@axios': path.resolve(root, 'src/api/axiosInstance'),
       },
     },
   };
