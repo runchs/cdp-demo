@@ -4,7 +4,11 @@ interface Env {
     mode: string;
 };
 
+let envCache: Env | null = null;
+
 export const getEnv = (): Env => {
+    if (envCache) return envCache;
+
     const {
         VITE_APP_NAME,
         VITE_API_URL,
@@ -14,9 +18,11 @@ export const getEnv = (): Env => {
     if (!VITE_API_URL) throw new Error('❌ Missing VITE_API_URL');
     if (!VITE_APP_NAME) throw new Error('❌ Missing VITE_APP_NAME');
 
-    return {
+    envCache = {
         appName: VITE_APP_NAME,
         apiUrl: VITE_API_URL,
         mode: VITE_MODE || 'sit',
     };
+
+    return envCache;
 };

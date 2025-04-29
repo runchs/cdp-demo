@@ -508,8 +508,8 @@ const C360Tabs: React.FC = () => {
                             <div className="fw-bold mb-2">Eligible Card:</div>
                             <div>
                                 {selectedPromotion?.eligibleCard && selectedPromotion.eligibleCard.length > 0 ? (
-                                    selectedPromotion.eligibleCard.map(card => (
-                                        <div>• {card}</div>
+                                    selectedPromotion.eligibleCard.map((card, index) => (
+                                        <div key={index}>• {card}</div>
                                     ))
                                 ) : (
                                     <div>-</div>

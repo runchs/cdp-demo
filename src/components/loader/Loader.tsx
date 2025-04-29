@@ -12,6 +12,7 @@ const Loader: React.FC = () => {
             backdrop="static" 
             keyboard={false}  
             animation={false}  
+            className="loader-modal"
         >
             <Modal.Body className="text-center">
                 <Spinner

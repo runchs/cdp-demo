@@ -1,4 +1,9 @@
-.modal-content {
-    border-radius: 20px !important;
-    overflow: hidden !important;
+.base-modal {
+    .modal-dialog {
+        min-width: 750px;
+        .modal-content {
+            border-radius: 20px !important;
+            overflow: hidden !important;
+        }
+    }
 }
