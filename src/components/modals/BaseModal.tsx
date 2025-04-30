@@ -4,26 +4,26 @@ import { ReactNode } from "react";
 interface IProps {
     isShow: boolean;
     onSave?: () => void;
-    onCancle?: () => void;
+    onCancel?: () => void;
     title: string;
     saveLabel?: string;
-    cancleLabel?: string;
+    cancelLabel?: string;
     children?: ReactNode;
 }
 
 function BaseModal({
     isShow,
     onSave,
-    onCancle,
+    onCancel,
     title = "Modal heading",
     saveLabel = "Save",
-    cancleLabel = "Cancle",
+    cancelLabel = "Cancel",
     children
 }: IProps) {
     return (
         <Modal
             show={isShow}
-            onHide={onCancle}
+            onHide={onCancel}
             size="lg"
             aria-labelledby="contained-modal-title-vcenter"
             centered
@@ -36,7 +36,7 @@ function BaseModal({
                 {children}
             </Modal.Body>
             <Modal.Footer className="px-5">
-                <Button onClick={onCancle} variant="secondary">{cancleLabel}</Button>
+                <Button onClick={onCancel} variant="secondary">{cancelLabel}</Button>
                 <Button onClick={onSave} className="purple-btn">{saveLabel}</Button>
             </Modal.Footer>
         </Modal>

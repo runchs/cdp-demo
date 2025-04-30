@@ -4,7 +4,7 @@ import { Row, Col } from "react-bootstrap";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
-import { convertId, CConvertType, IconvertInfo } from '@/composables/convertId'
+import { useConvertId, IconvertInfo } from '@/composables/convertId'
 
 enum COption {
   AeonId = '1',
@@ -14,6 +14,7 @@ enum COption {
 const SearchView: React.FC = () => {
 
   const navigate = useNavigate();
+  const { convertAeonId, convertCustomerId } = useConvertId();
 
   const [selectedOption, setSelectedOption] = useState<COption>(COption.AeonId);
   const [aeonId, setAEONId] = useState<string>("");
@@ -55,9 +56,9 @@ const SearchView: React.FC = () => {
       if (!error) {
         setShowAlert(false);
         if (selectedOption === COption.AeonId) {
-          setconvertInfo(convertId(CConvertType.AeonId, aeonId));
+          convertAeonId(aeonId).then(info => setconvertInfo(info));
         } else if (selectedOption === COption.CustomerId) {
-          setconvertInfo(convertId(CConvertType.CustomrtId, customerId));
+          convertCustomerId(customerId).then(info => setconvertInfo(info));
         }
       } else {
         setAlertMsg("Customer not found (Not register Web Member Service)");

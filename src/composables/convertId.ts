@@ -1,10 +1,7 @@
+// useConvert.ts
 import axios from '@axios';
-import { useState } from 'react';
-
-export enum CConvertType {
-    AeonId = 1,
-    CustomrtId
-}
+import { useLoader } from '@/contexts/LoaderContext';
+import { useCallback } from 'react';
 
 export interface IconvertInfo {
     aeonId: string;
@@ -13,54 +10,49 @@ export interface IconvertInfo {
     user?: string;
 }
 
-const convertInfo = <IconvertInfo>{
-    aeonId: '',
-    customerId: '',
-    traceId: '',
-}
+export const useConvertId = () => {
+    const { setIsLoading } = useLoader();
 
-export const convertId = (type: CConvertType, value: string, user?: string) => {
-    if (type === CConvertType.AeonId) {
-        convertAeonId(value, user);
-    } else {
-        convertCustomerId(value, user);
-    }
+    const convertAeonId = useCallback((id: string, user?: string): Promise<IconvertInfo> => {
+        setIsLoading(true);
+        return axios.get('/convert/aeonid', { params: { aeon_id: id, user, case: 400 } })
+            .then((response: any) => {
+                const resp = response.data;
+                return {
+                    aeonId: resp.aeon_id,
+                    customerId: resp.cust_id,
+                    traceId: resp.trace_id,
+                    user
+                };
+            })
+            .catch((error: any) => {
+                const err = error.response.data.error;
+                throw err.code === 'NOT_FOUND' ? err.details.db : err.message;
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
+    }, [setIsLoading]);
 
-    return convertInfo;
-}
+    const convertCustomerId = useCallback((id: string, user?: string): Promise<IconvertInfo> => {
+        return axios.get('/convert/custid', { params: { cust_id: id, user } })
+            .then((response: any) => {
+                const resp = response.data;
+                return {
+                    aeonId: resp.aeon_id,
+                    customerId: resp.cust_id,
+                    traceId: resp.trace_id,
+                    user
+                };
+            })
+            .catch((error: any) => {
+                const err = error.response.data.error;
+                throw err.code === 'NOT_FOUND' ? err.details.db : err.message;
+            });
+    }, []);
 
-const convertAeonId = (id: string, user?: string) => {
-    // connect api convert aeon id
-    // axios.get('/convert/aeonid', { params: { aeon_id: id, user: user } })
-    //     .then((response: any) => {
-    //         const resp = response.data;
-
-    //         convertInfo.aeonId = resp.aeon_id;
-    //         convertInfo.customerId = resp.cust_id;
-    //         convertInfo.traceId = resp.trace_id;
-    //     })
-    //     .catch((error: any) => {
-    //         console.error("เกิดข้อผิดพลาด:", error);
-    //     })
-    //     .finally(() => {
-
-    //     });
-}
-
-const convertCustomerId = (id: string, user?: string) => {
-    // connect api convert customer id
-    axios.get('/convert/custid', { params: { cust_id: id, user: user } })
-        .then((response: any) => {
-            const resp = response.data;
-
-            convertInfo.aeonId = resp.aeon_id;
-            convertInfo.customerId = resp.cust_id;
-            convertInfo.traceId = resp.trace_id;
-        })
-        .catch((error: any) => {
-            console.error("เกิดข้อผิดพลาด:", error);
-        })
-        .finally(() => {
-
-        });
-}
+    return {
+        convertAeonId,
+        convertCustomerId
+    };
+};

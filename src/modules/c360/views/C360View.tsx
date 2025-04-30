@@ -11,7 +11,7 @@ import Alert from 'react-bootstrap/Alert';
 import BaseModal from "@/components/modals/BaseModal";
 
 // composable
-import { convertId, CConvertType, IconvertInfo } from '@/composables/convertId'
+import { useConvertId, IconvertInfo } from '@/composables/convertId'
 
 // context
 import { useLoader } from '@/contexts/LoaderContext';
@@ -84,7 +84,7 @@ interface IInfo {
 }
 
 interface IError {
-    ConvertID: boolean;
+    DB: boolean;
     CDP: boolean;
     SystemI: boolean;
 }
@@ -100,10 +100,13 @@ const C360Tabs: React.FC = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
-    const { setIsLoading, isLoading } = useLoader();
+    const [errorMsg, setErrorMsg] = useState(false);
+
+    const { convertAeonId } = useConvertId();
+    const { isLoading, setIsLoading } = useLoader();
 
     const [error, setError] = useState<IError>({
-        ConvertID: false,
+        DB: false,
         CDP: false,
         SystemI: false,
     })
@@ -168,7 +171,18 @@ const C360Tabs: React.FC = () => {
         if (location.pathname === '/c360') {
             const aeonid = searchParams.get('aeonid');
             if (aeonid) {
-                convertInfo.current = convertId(CConvertType.AeonId, aeonid);
+                convertAeonId(aeonid)
+                    .then((info: any) => {
+                        convertInfo.current = info;
+                        getInfo();
+                    })
+                    .catch((msg: any) => {
+                        setError(prev => ({
+                            ...prev,
+                            DB: true,
+                        }));
+                        setErrorMsg(msg);
+                    });
             }
         } else if (location.pathname === '/information') {
             const aeonid = searchParams.get('aeonid');
@@ -183,8 +197,6 @@ const C360Tabs: React.FC = () => {
                 };
             }
         }
-
-        getInfo();
 
     }, [location]);
 
@@ -205,32 +217,32 @@ const C360Tabs: React.FC = () => {
             .then((response: any) => {
                 const resp = response.data;
 
-        // mock data for test
-        // const resp = {
-        //     "national_id": "1100800391079",
-        //     "customer_name_eng": "MEENA TESTCDP",
-        //     "customer_name_th": "มีนา TESTCDP",
-        //     "mobile_no": "0982757360",
-        //     "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
-        //     "mail_to": "Home"
-        // }
+                // mock data for test
+                // const resp = {
+                //     "national_id": "1100800391079",
+                //     "customer_name_eng": "MEENA TESTCDP",
+                //     "customer_name_th": "มีนา TESTCDP",
+                //     "mobile_no": "0982757360",
+                //     "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
+                //     "mail_to": "Home"
+                // }
 
-        setInfo(prev => ({
-            ...prev,
-            nationalID: resp.national_id,
-            nameTH: resp.customer_name_th,
-            nameEN: resp.customer_name_eng,
-            mobileNo: resp.mobile_no,
-            mailTo: resp.mail_to,
-            address: resp.mail_to_address,
-        }));
-        })
-        .catch((error: any) => {
-            console.error("เกิดข้อผิดพลาด:", error);
-        })
-        .finally(() => {
-            setIsLoading(false);
-        });
+                setInfo(prev => ({
+                    ...prev,
+                    nationalID: resp.national_id,
+                    nameTH: resp.customer_name_th,
+                    nameEN: resp.customer_name_eng,
+                    mobileNo: resp.mobile_no,
+                    mailTo: resp.mail_to,
+                    address: resp.mail_to_address,
+                }));
+            })
+            .catch((error: any) => {
+                console.error("เกิดข้อผิดพลาด:", error);
+            })
+            .finally(() => {
+                setIsLoading(false);
+            });
     }
 
     const getCustomerSegment = () => {
@@ -496,7 +508,7 @@ const C360Tabs: React.FC = () => {
         return (
             <BaseModal
                 isShow={showModal}
-                onCancle={() => setShowModal(false)}
+                onCancel={() => setShowModal(false)}
                 title="Promotion Detail"
                 onSave={() => onSavePromotion()}
             >
@@ -638,31 +650,18 @@ const C360Tabs: React.FC = () => {
         }
     };
 
-    const handleErrMsg = () => {
-        switch (true) {
-            case error.ConvertID:
-                return 'Customer not found';
-            case error.CDP:
-                return 'Customer not found from CDP';
-            case error.SystemI:
-                return 'Not found data from System-i';
-            default:
-                return 'Customer not found';
-        }
-    }
-
-
     return !isLoading ? (
         <div className="bg-whit c360-wrp">
+            {error.DB}
             {/* error msg */}
-            {(error.ConvertID || error.CDP || error.SystemI) && (
+            {(error.DB || error.CDP || error.SystemI) && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
-                    <div>{handleErrMsg()} (Trace ID: {convertInfo.current.traceId}).</div>
+                    <div>{errorMsg} {!error.DB && `(Trace ID: ${convertInfo.current.traceId})`}.</div>
                 </Alert>
             )}
 
             {/* card 1 */}
-            {!error.ConvertID && (
+            {!error.DB && (
                 <div>
                     <Row className="shadow-sm info-top gx-0 bg-purple-gradient">
                         <Col xs={10} className="text-start fw-bold">
