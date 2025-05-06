@@ -100,6 +100,7 @@ const C360Tabs: React.FC = () => {
 
     const [showModal, setShowModal] = useState(false);
     const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
+    const [showError, setShowError] = useState(false);
     const [errorMsg, setErrorMsg] = useState(false);
 
     const { convertAeonId } = useConvertId();
@@ -200,19 +201,25 @@ const C360Tabs: React.FC = () => {
 
     }, [location]);
 
-    const getInfo = () => {
-        getCustomerInfo();
-        getCustomerSegment();
-        getCustomerProfile();
-        getSuggestion();
-    }
+    const getInfo = async () => {
+        setIsLoading(true);
+        try {
+            await Promise.allSettled([
+                getCustomerInfo(),
+                getCustomerSegment(),
+                getCustomerProfile(),
+                getSuggestion()
+            ]);
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     const getCustomerInfo = () => {
-        setIsLoading(true);
         axios.get('/dashboard/custinfo', {
             headers: {
                 'Trace-ID': convertInfo.current.traceId
-            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
+            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId, case: 404 }
         })
             .then((response: any) => {
                 const resp = response.data;
@@ -238,34 +245,39 @@ const C360Tabs: React.FC = () => {
                 }));
             })
             .catch((error: any) => {
-                console.error("เกิดข้อผิดพลาด:", error);
+                const err = error.response.data.error;
+                if(err.code === 'NOT_FOUND') {
+                    setError(prev => ({
+                        ...prev,
+                        SystemI: true,
+                    }));
+                    setErrorMsg(err.details.connector_api);
+                } else {
+                    setErrorMsg(err.details.message);
+                }                
             })
-            .finally(() => {
-                setIsLoading(false);
-            });
     }
 
     const getCustomerSegment = () => {
-        setIsLoading(true);
-        axios.get('/dashboard/custsegment', {
-            headers: {
-                'Trace-ID': convertInfo.current.traceId
-            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        })
-            .then((response: any) => {
-                const resp = response.data;
+        // axios.get('/dashboard/custsegment', {
+        //     headers: {
+        //         'Trace-ID': convertInfo.current.traceId
+        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
+        // })
+        //     .then((response: any) => {
+        //         const resp = response.data;
 
         // mock data for test
-        // const resp = {
-        //     "sweetheart": "Sweetheart",
-        //     "complaint_level": "Complaint Level: 1",
-        //     "customer_group": "NORMAL - VIP Customer",
-        //     "complaint_group": "",
-        //     "customer_type": "VP",
-        //     "member_status": "NORMAL",
-        //     "customer_segment": "Existing Customer - Active",
-        //     "update_data": "01 Jan 0001"
-        // }
+        const resp = {
+            "sweetheart": "Sweetheart",
+            "complaint_level": "Complaint Level: 1",
+            "customer_group": "NORMAL - VIP Customer",
+            "complaint_group": "",
+            "customer_type": "VP",
+            "member_status": "NORMAL",
+            "customer_segment": "Existing Customer - Active",
+            "update_data": "01 Jan 0001"
+        }
 
         setInfo(prev => ({
             ...prev,
@@ -278,21 +290,17 @@ const C360Tabs: React.FC = () => {
             customerSegment: resp.customer_segment,
             updateDate: resp.update_data,
         }));
-        })
-        .catch((error: any) => {
-            console.error("เกิดข้อผิดพลาด:", error);
-        })
-        .finally(() => {
-            setIsLoading(false);
-        });
+        // })
+        // .catch((error: any) => {
+        //     console.error("เกิดข้อผิดพลาด:", error);
+        // })
     }
 
     const getCustomerProfile = () => {
-        setIsLoading(true);
         axios.get('/dashboard/custprofile', {
             headers: {
                 'Trace-ID': convertInfo.current.traceId
-            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
+            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId, case: 404 }
         })
             .then((response: any) => {
                 const resp = response.data;
@@ -344,67 +352,72 @@ const C360Tabs: React.FC = () => {
         }));
         })
         .catch((error: any) => {
-            console.error("เกิดข้อผิดพลาด:", error);
+            const err = error.response.data.error;
+                if(err.code === 'NOT_FOUND') {
+                    setError(prev => ({
+                        ...prev,
+                        SystemI: true,
+                    }));
+                    setErrorMsg(err.details.connector_api);
+                } else {
+                    setErrorMsg(err.details.message);
+                }                
         })
-        .finally(() => {
-            setIsLoading(false);
-        });
     }
 
     const getSuggestion = () => {
-        setIsLoading(true);
-        axios.get('/dashboard/suggestion', {
-            headers: {
-                'Trace-ID': convertInfo.current.traceId
-            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        })
-            .then((response: any) => {
-                const resp = response.data;
+        // axios.get('/dashboard/suggestion', {
+        //     headers: {
+        //         'Trace-ID': convertInfo.current.traceId
+        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
+        // })
+        //     .then((response: any) => {
+        //         const resp = response.data;
 
         // mock data for test
-        // const resp = {
-        //     "suggest_cards": [
-        //         "Club Thailand JCB Card​",
-        //         "Club Thailand Mastercard​",
-        //         "Club Thailand Visa Card"
-        //     ],
-        //     "suggest_promotions": [
-        //         {
-        //             "promotion_code": "P24099EEBE",
-        //             "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
-        //             "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
-        //             "action": "test",
-        //             "promotion_result_timestamp": "25 Mar 2025, 14.24",
-        //             "period": "4 Sep 2024 - 31 Aug 2025",
-        //             "eligible_card": [
-        //                 "BIG C WORLD MASTERCARD"
-        //             ]
-        //         },
-        //         {
-        //             "promotion_code": "P240362142",
-        //             "promotion_name": "buy insurance web aeon",
-        //             "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
-        //             "action": "Acknowledged",
-        //             "promotion_result_timestamp": "25 Feb 2025, 13.19",
-        //             "period": "21 Mar 2024 - 31 Dec 2025",
-        //             "eligible_card": [
-        //                 "JCB CARD"
-        //             ]
-        //         },
-        //         {
-        //             "promotion_code": "P2409CB775",
-        //             "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
-        //             "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
-        //             "action": "Acknowledged",
-        //             "promotion_result_timestamp": "17 Feb 2025, 16.01",
-        //             "period": "25 Sep 2024 - 30 Sep 2025",
-        //             "eligible_card": [
-        //                 "AEON ROP WORLD MASTER CARD",
-        //                 "VISA CARD"
-        //             ]
-        //         }
-        //     ]
-        // }
+        const resp = {
+            "suggest_cards": [
+                "Club Thailand JCB Card​",
+                "Club Thailand Mastercard​",
+                "Club Thailand Visa Card"
+            ],
+            "suggest_promotions": [
+                {
+                    "promotion_code": "P24099EEBE",
+                    "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
+                    "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
+                    "action": "test",
+                    "promotion_result_timestamp": "25 Mar 2025, 14.24",
+                    "period": "4 Sep 2024 - 31 Aug 2025",
+                    "eligible_card": [
+                        "BIG C WORLD MASTERCARD"
+                    ]
+                },
+                {
+                    "promotion_code": "P240362142",
+                    "promotion_name": "buy insurance web aeon",
+                    "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
+                    "action": "Acknowledged",
+                    "promotion_result_timestamp": "25 Feb 2025, 13.19",
+                    "period": "21 Mar 2024 - 31 Dec 2025",
+                    "eligible_card": [
+                        "JCB CARD"
+                    ]
+                },
+                {
+                    "promotion_code": "P2409CB775",
+                    "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
+                    "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
+                    "action": "Acknowledged",
+                    "promotion_result_timestamp": "17 Feb 2025, 16.01",
+                    "period": "25 Sep 2024 - 30 Sep 2025",
+                    "eligible_card": [
+                        "AEON ROP WORLD MASTER CARD",
+                        "VISA CARD"
+                    ]
+                }
+            ]
+        }
 
         setInfo(prev => ({
             ...prev,
@@ -422,13 +435,10 @@ const C360Tabs: React.FC = () => {
                 }))
                 : []
         }));
-        })
-        .catch((error: any) => {
-            console.error("เกิดข้อผิดพลาด:", error);
-        })
-        .finally(() => {
-            setIsLoading(false);
-        });
+        // })
+        // .catch((error: any) => {
+        //     console.error("เกิดข้อผิดพลาด:", error);
+        // })
     }
 
     const suggestCards = () => {
@@ -659,7 +669,7 @@ const C360Tabs: React.FC = () => {
             {/* error msg */}
             {(error.DB || error.CDP || error.SystemI) && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
-                    <div>{errorMsg} {!error.DB && `(Trace ID: ${convertInfo.current.traceId})`}.</div>
+                    <div>{errorMsg} {!error.DB && `(Trace ID: ${convertInfo.current.traceId}).`}</div>
                 </Alert>
             )}
 
