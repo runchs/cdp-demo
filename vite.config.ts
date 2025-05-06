@@ -13,5 +13,9 @@ export default defineConfig(() => {
         '@axios': path.resolve(root, 'src/api/axiosInstance'),
       },
     },
+    server: {
+      host: '0.0.0.0',
+      port: 5173
+    }
   };
 });

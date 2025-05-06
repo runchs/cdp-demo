@@ -15,7 +15,7 @@ export const useConvertId = () => {
 
     const convertAeonId = useCallback((id: string, user?: string): Promise<IconvertInfo> => {
         setIsLoading(true);
-        return axios.get('/convert/aeonid', { params: { aeon_id: id, user, case: 400 } })
+        return axios.get('/convert/aeonid', { params: { aeon_id: id, user } })
             .then((response: any) => {
                 const resp = response.data;
                 return {

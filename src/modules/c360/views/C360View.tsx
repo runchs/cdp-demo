@@ -246,25 +246,26 @@ const C360Tabs: React.FC = () => {
     }
 
     const getCustomerSegment = () => {
-        // axios.get('/dashboard/custsegment', {
-        //     headers: {
-        //         'Trace-ID': convertInfo.current.traceId
-        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        // })
-        //     .then((response: any) => {
-        //         const resp = response.data;
+        setIsLoading(true);
+        axios.get('/dashboard/custsegment', {
+            headers: {
+                'Trace-ID': convertInfo.current.traceId
+            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
+        })
+            .then((response: any) => {
+                const resp = response.data;
 
         // mock data for test
-        const resp = {
-            "sweetheart": "Sweetheart",
-            "complaint_level": "Complaint Level: 1",
-            "customer_group": "NORMAL - VIP Customer",
-            "complaint_group": "",
-            "customer_type": "VP",
-            "member_status": "NORMAL",
-            "customer_segment": "Existing Customer - Active",
-            "update_data": "01 Jan 0001"
-        }
+        // const resp = {
+        //     "sweetheart": "Sweetheart",
+        //     "complaint_level": "Complaint Level: 1",
+        //     "customer_group": "NORMAL - VIP Customer",
+        //     "complaint_group": "",
+        //     "customer_type": "VP",
+        //     "member_status": "NORMAL",
+        //     "customer_segment": "Existing Customer - Active",
+        //     "update_data": "01 Jan 0001"
+        // }
 
         setInfo(prev => ({
             ...prev,
@@ -277,47 +278,48 @@ const C360Tabs: React.FC = () => {
             customerSegment: resp.customer_segment,
             updateDate: resp.update_data,
         }));
-        // })
-        // .catch((error: any) => {
-        //     console.error("เกิดข้อผิดพลาด:", error);
-        // })
-        // .finally(() => {
-
-        // });
+        })
+        .catch((error: any) => {
+            console.error("เกิดข้อผิดพลาด:", error);
+        })
+        .finally(() => {
+            setIsLoading(false);
+        });
     }
 
     const getCustomerProfile = () => {
-        // axios.get('/dashboard/custprofile', {
-        //     headers: {
-        //         'Trace-ID': convertInfo.current.traceId
-        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        // })
-        //     .then((response: any) => {
-        //         const resp = response.data;
+        setIsLoading(true);
+        axios.get('/dashboard/custprofile', {
+            headers: {
+                'Trace-ID': convertInfo.current.traceId
+            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
+        })
+            .then((response: any) => {
+                const resp = response.data;
 
         // mock data for test
-        const resp = {
-            "error_system": null,
-            "last_card_apply_date": "25 Aug 2023",
-            "customer_sentiment": "",
-            "phone_no_last_update_date": "01 Aug 2024",
-            "last_increase_credit_limit_update": "29 Aug 2023",
-            "last_reduce_credit_limit_update": "01 Jan 0001",
-            "last_income_update": "29 Aug 2023",
-            "suggested_action": "",
-            "type_of_job": "",
-            "marital_status": "",
-            "gender": "",
-            "last_e_statement_sent_date": "01 Jan 0001",
-            "e_statement_sent_status": "",
-            "statement_channel": "",
-            "consent_for_disclose": "",
-            "block_media": "No blocked",
-            "consent_for_collect_use": "Incomplete",
-            "payment_status": "On time",
-            "day_past_due": "",
-            "last_overdue_date": "-"
-        }
+        // const resp = {
+        //     "error_system": null,
+        //     "last_card_apply_date": "25 Aug 2023",
+        //     "customer_sentiment": "",
+        //     "phone_no_last_update_date": "01 Aug 2024",
+        //     "last_increase_credit_limit_update": "29 Aug 2023",
+        //     "last_reduce_credit_limit_update": "01 Jan 0001",
+        //     "last_income_update": "29 Aug 2023",
+        //     "suggested_action": "",
+        //     "type_of_job": "",
+        //     "marital_status": "",
+        //     "gender": "",
+        //     "last_e_statement_sent_date": "01 Jan 0001",
+        //     "e_statement_sent_status": "",
+        //     "statement_channel": "",
+        //     "consent_for_disclose": "",
+        //     "block_media": "No blocked",
+        //     "consent_for_collect_use": "Incomplete",
+        //     "payment_status": "On time",
+        //     "day_past_due": "",
+        //     "last_overdue_date": "-"
+        // }
 
         setInfo(prev => ({
             ...prev,
@@ -340,68 +342,69 @@ const C360Tabs: React.FC = () => {
             dayPastDue: resp.day_past_due || "0",
             lastOverDueDate: resp.last_overdue_date,
         }));
-        // })
-        // .catch((error: any) => {
-        //     console.error("เกิดข้อผิดพลาด:", error);
-        // })
-        // .finally(() => {
-
-        // });
+        })
+        .catch((error: any) => {
+            console.error("เกิดข้อผิดพลาด:", error);
+        })
+        .finally(() => {
+            setIsLoading(false);
+        });
     }
 
     const getSuggestion = () => {
-        // axios.get('/dashboard/suggestion', {
-        //     headers: {
-        //         'Trace-ID': convertInfo.current.traceId
-        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        // })
-        //     .then((response: any) => {
-        //         const resp = response.data;
+        setIsLoading(true);
+        axios.get('/dashboard/suggestion', {
+            headers: {
+                'Trace-ID': convertInfo.current.traceId
+            }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
+        })
+            .then((response: any) => {
+                const resp = response.data;
 
         // mock data for test
-        const resp = {
-            "suggest_cards": [
-                "Club Thailand JCB Card​",
-                "Club Thailand Mastercard​",
-                "Club Thailand Visa Card"
-            ],
-            "suggest_promotions": [
-                {
-                    "promotion_code": "P24099EEBE",
-                    "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
-                    "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
-                    "action": "test",
-                    "promotion_result_timestamp": "25 Mar 2025, 14.24",
-                    "period": "4 Sep 2024 - 31 Aug 2025",
-                    "eligible_card": [
-                        "BIG C WORLD MASTERCARD"
-                    ]
-                },
-                {
-                    "promotion_code": "P240362142",
-                    "promotion_name": "buy insurance web aeon",
-                    "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
-                    "action": "Acknowledged",
-                    "promotion_result_timestamp": "25 Feb 2025, 13.19",
-                    "period": "21 Mar 2024 - 31 Dec 2025",
-                    "eligible_card": [
-                        "JCB CARD"
-                    ]
-                },
-                {
-                    "promotion_code": "P2409CB775",
-                    "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
-                    "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
-                    "action": "Acknowledged",
-                    "promotion_result_timestamp": "17 Feb 2025, 16.01",
-                    "period": "25 Sep 2024 - 30 Sep 2025",
-                    "eligible_card": [
-                        "AEON ROP WORLD MASTER CARD",
-                        "VISA CARD"
-                    ]
-                }
-            ]
-        }
+        // const resp = {
+        //     "suggest_cards": [
+        //         "Club Thailand JCB Card​",
+        //         "Club Thailand Mastercard​",
+        //         "Club Thailand Visa Card"
+        //     ],
+        //     "suggest_promotions": [
+        //         {
+        //             "promotion_code": "P24099EEBE",
+        //             "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
+        //             "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
+        //             "action": "test",
+        //             "promotion_result_timestamp": "25 Mar 2025, 14.24",
+        //             "period": "4 Sep 2024 - 31 Aug 2025",
+        //             "eligible_card": [
+        //                 "BIG C WORLD MASTERCARD"
+        //             ]
+        //         },
+        //         {
+        //             "promotion_code": "P240362142",
+        //             "promotion_name": "buy insurance web aeon",
+        //             "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
+        //             "action": "Acknowledged",
+        //             "promotion_result_timestamp": "25 Feb 2025, 13.19",
+        //             "period": "21 Mar 2024 - 31 Dec 2025",
+        //             "eligible_card": [
+        //                 "JCB CARD"
+        //             ]
+        //         },
+        //         {
+        //             "promotion_code": "P2409CB775",
+        //             "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
+        //             "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
+        //             "action": "Acknowledged",
+        //             "promotion_result_timestamp": "17 Feb 2025, 16.01",
+        //             "period": "25 Sep 2024 - 30 Sep 2025",
+        //             "eligible_card": [
+        //                 "AEON ROP WORLD MASTER CARD",
+        //                 "VISA CARD"
+        //             ]
+        //         }
+        //     ]
+        // }
 
         setInfo(prev => ({
             ...prev,
@@ -419,13 +422,13 @@ const C360Tabs: React.FC = () => {
                 }))
                 : []
         }));
-        // })
-        // .catch((error: any) => {
-        //     console.error("เกิดข้อผิดพลาด:", error);
-        // })
-        // .finally(() => {
-
-        // });
+        })
+        .catch((error: any) => {
+            console.error("เกิดข้อผิดพลาด:", error);
+        })
+        .finally(() => {
+            setIsLoading(false);
+        });
     }
 
     const suggestCards = () => {
