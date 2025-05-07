@@ -2,6 +2,7 @@
 import axios from '@axios';
 import { useLoader } from '@/contexts/LoaderContext';
 import { useCallback } from 'react';
+import { IConvertInfo } from '@/store/slices/convertInfoSlice'
 
 export interface IconvertInfo {
     aeonId: string;
@@ -13,7 +14,7 @@ export interface IconvertInfo {
 export const useConvertId = () => {
     const { setIsLoading } = useLoader();
 
-    const convertAeonId = useCallback((id: string, user?: string): Promise<IconvertInfo> => {
+    const convertAeonId = useCallback((id: string, user?: string): Promise<IConvertInfo> => {
         setIsLoading(true);
         return axios.get('/convert/aeonid', { params: { aeon_id: id, user: user } })
             .then((response: any) => {
@@ -35,7 +36,7 @@ export const useConvertId = () => {
             });
     }, [setIsLoading]);
 
-    const convertCustomerId = useCallback((id: string, user?: string): Promise<IconvertInfo> => {
+    const convertCustomerId = useCallback((id: string, user?: string): Promise<IConvertInfo> => {
         return axios.get('/convert/custid', { params: { cust_id: id, user: user } })
             .then((response: any) => {
                 const resp = response.data;

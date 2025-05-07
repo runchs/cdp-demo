@@ -33,6 +33,14 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const role = location.state?.role || CRole.User;
 
+  const [loadedTabs, setLoadedTabs] = useState<Record<string, boolean>>({
+    empro: false,
+    c360: false,
+    apiLog: false,
+    account: false,
+    authorizationKey: false,
+  });
+
   const onLogOut = () => {
     // api
     navigate("/");
@@ -43,7 +51,7 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
     [CRole.Administrator]: "apiLog",
     [CRole.Admin]: "authorizationKey",
   };
-  
+
   const handleActiveTab = () => {
     return activeTab ?? roleDefaultTabs[role as CRole] ?? "empro";
   };
@@ -53,6 +61,12 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
       setActiveTab(roleDefaultTabs[role as CRole]);
     }
   }, [role, activeTab]);
+
+  useEffect(() => {
+    if (activeTab && !loadedTabs[activeTab] && activeTab !== "logOut") {
+      setLoadedTabs(prev => ({ ...prev, [activeTab]: true }));
+    }
+  }, [activeTab]);
 
   return (
     <div className="h-100">
@@ -110,7 +124,7 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
       {/* แสดงเนื้อหาแท็บตาม activeTab */}
       <div className="tab-content-wrp">
         {activeTab === "empro" && <EmproTab />}
-        {activeTab === "c360" && <C360Tab />}
+        {activeTab === "c360" && <C360Tab shouldFetch={!loadedTabs.c360} />}
         {activeTab === "apiLog" && <APILogTab />}
         {activeTab === "account" && <AccountView />}
         {activeTab === "authorizationKey" && <AuthKeyView />}
