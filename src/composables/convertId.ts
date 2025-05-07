@@ -15,7 +15,7 @@ export const useConvertId = () => {
 
     const convertAeonId = useCallback((id: string, user?: string): Promise<IconvertInfo> => {
         setIsLoading(true);
-        return axios.get('/convert/aeonid', { params: { aeon_id: id, user } })
+        return axios.get('/convert/aeonid', { params: { aeon_id: id, user: user } })
             .then((response: any) => {
                 const resp = response.data;
                 return {
@@ -26,6 +26,7 @@ export const useConvertId = () => {
                 };
             })
             .catch((error: any) => {
+                console.error("Error:", error);
                 const err = error.response.data.error;
                 throw err.code === 'NOT_FOUND' ? err.details.db : err.message;
             })
@@ -35,7 +36,7 @@ export const useConvertId = () => {
     }, [setIsLoading]);
 
     const convertCustomerId = useCallback((id: string, user?: string): Promise<IconvertInfo> => {
-        return axios.get('/convert/custid', { params: { cust_id: id, user } })
+        return axios.get('/convert/custid', { params: { cust_id: id, user: user } })
             .then((response: any) => {
                 const resp = response.data;
                 return {
