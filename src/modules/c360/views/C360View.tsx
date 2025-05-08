@@ -23,13 +23,13 @@ import { setConvertInfo } from '@/store/slices/convertInfoSlice';
 // api
 import axios from '@axios';
 
-enum COfferResult {
+enum OfferResult {
     Acknowledged = 'Acknowledged',
     Interested = 'Interested',
     NotInterested = 'Not Interested',
 }
 
-interface IPromotion {
+interface Promotion {
     code: string;
     name: string;
     detail: string;
@@ -37,10 +37,10 @@ interface IPromotion {
     resultTimestamp: string;
     period: string;
     eligibleCard: string[];
-    offerResult: COfferResult | null;
+    offerResult: OfferResult | null;
 }
 
-interface IInfo {
+interface Info {
     updateDate: string;
     // card 1
     nameTH: string;
@@ -84,33 +84,28 @@ interface IInfo {
     // card 9
     suggestCards: string[];
     // card 10
-    suggestPromotions: IPromotion[]
+    suggestPromotions: Promotion[]
 }
-
-interface IError {
-    DB: boolean;
-    CDP: boolean;
-    SystemI: boolean;
-    Other: boolean;
-}
-
-const offerResultOptions = [
-    { label: "Acknowledged", value: "Acknowledged" },
-    { label: "Interested", value: "Interested" },
-    { label: "Not Interested", value: "Not Interested" },
-];
 
 interface C360TabsProps {
     shouldFetch: boolean;
+}
+
+interface ErrorState {
+    DB: boolean;         // true = error
+    CDP: boolean[];      // ต้องครบ 3 เส้นถึงจะเป็น error (CustSegment, Suggestion, CustProfile)
+    SystemI: boolean[];  // ต้องครบ 2 เส้นถึงจะเป็น error (CustInfo, CustProfile)
+    Other: boolean;
 }
 
 const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
     const location = useLocation();
 
     const [showModal, setShowModal] = useState(false);
-    const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
-    const [showError, setShowError] = useState(false);
-    const [errorMsg, setErrorMsg] = useState(false);
+    const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
+
+    const [errorMsg, setErrorMsg] = useState<string>('');
+    const [showInfo, setShowInfo] = useState<boolean>(true);
 
     const { convertAeonId } = useConvertId();
     const { isLoading, setIsLoading } = useLoader();
@@ -118,14 +113,14 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
     const dispatch = useAppDispatch();
     const convertInfo = useAppSelector(state => state.convertInfo);
 
-    const [error, setError] = useState<IError>({
+    const [error, setError] = useState<ErrorState>({
         DB: false,
-        CDP: false,
-        SystemI: false,
-        Other: false
-    })
+        CDP: [false, false, false],
+        SystemI: [false, false],
+        Other: false,
+    });
 
-    const [info, setInfo] = useState<IInfo>({
+    const [info, setInfo] = useState<Info>({
         updateDate: '',
         // card 1
         nameTH: '',
@@ -172,6 +167,12 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
         suggestPromotions: []
     });
 
+    const offerResultOptions = [
+        { label: "Acknowledged", value: "Acknowledged" },
+        { label: "Interested", value: "Interested" },
+        { label: "Not Interested", value: "Not Interested" },
+    ];
+
     useEffect(() => {
         if (shouldFetch) {
             const searchParams = new URLSearchParams(location.search);
@@ -184,12 +185,11 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
                             dispatch(setConvertInfo(info));
                         })
                         .catch((msg: any) => {
-                            setError(prev => ({
+                            setError((prev) => ({
                                 ...prev,
                                 DB: true,
                             }));
                             setErrorMsg(msg);
-                            setShowError(true);
                         });
                 }
             } else if (location.pathname === '/information') {
@@ -210,252 +210,351 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
 
     useEffect(() => {
         if (convertInfo.aeonId && convertInfo.customerId && convertInfo.traceId) {
-
-            const getInfo = async () => {
+            const fetchAllCustomerData = async () => {
                 setIsLoading(true);
+                setErrorMsg('');
+                let firstErrorMsg = '';
+
+                const handleApiError = (category: keyof ErrorState, msg: string) => {
+                    setError(prev => {
+                        const updatedError = { ...prev } as ErrorState;
+
+                        if (Array.isArray(prev[category])) {
+                            const arr = [...(prev[category] as boolean[])];
+                            const firstFalseIndex = arr.findIndex(v => v === false);
+
+                            if (firstFalseIndex !== -1) {
+                                arr[firstFalseIndex] = true;
+                                (updatedError[category] as boolean[]) = arr;
+                            } else {
+                                console.warn(`All slots in ${category} already have errors.`);
+                            }
+                        } else {
+                            (updatedError[category] as boolean) = true;
+                        }
+
+                        return updatedError;
+                    });
+
+                    if (!firstErrorMsg) {
+                        firstErrorMsg = msg;
+                    }
+                };
+
                 try {
                     await Promise.allSettled([
-                        getCustomerInfo(),
-                        getCustomerSegment(),
-                        getCustomerProfile(),
-                        getSuggestion()
+                        getCustomerInfo().catch((err: any) => {
+                            console.error('getCustomerInfo error:', err);
+                            if (err.code !== 'NOT_FOUND' && err.code !== 'NO_RESPONSE') {
+                                handleApiError('Other', err.message);
+                            } else {
+                                handleApiError('SystemI', err.details.connector_api);
+                            }
+                        }),
+                        getCustomerSegment().catch((err: any) => {
+                            console.error('getCustomerSegment error:', err);
+                            if (err.code !== 'NOT_FOUND' && err.code !== 'NO_RESPONSE') {
+                                handleApiError('Other', err.message);
+                            } else {
+                                handleApiError('CDP', err.details.td);
+                            }
+                        }),
+                        getCustomerProfile().catch((err: any) => {
+                            console.error('getCustomerProfile error:', err);
+                            if (err.code !== 'NOT_FOUND' && err.code !== 'NO_RESPONSE') {
+                                handleApiError('Other', err.message);
+                            } else {
+                                if(err.details.connector_api) {
+                                    handleApiError('SystemI', err.details.connector_api);
+                                }
+                                if (err.details.td) {
+                                    handleApiError('CDP', err.details.td);
+                                }                                
+                            }
+                        }),
+                        getSuggestion().catch((err: any) => {
+                            console.error('getSuggestion error:', err);
+                            if (err.code !== 'NOT_FOUND' && err.code !== 'NO_RESPONSE') {
+                                handleApiError('Other', err.message);
+                            } else {
+                                handleApiError('CDP', err.details.td);
+                            }
+                        }),
                     ]);
+                    setErrorMsg(firstErrorMsg);
+                } catch (err) {
+                    console.error('Error in fetch:', err);
+                    setErrorMsg("An error occurred during data fetching.");
                 } finally {
                     setIsLoading(false);
                 }
             };
 
-            getInfo();
+            fetchAllCustomerData();
         }
     }, [convertInfo]);
 
+    useEffect(() => {
+        const isAllError = (errors: boolean[]): boolean => errors.every(error => error);
+
+        function checkCustomerError(errorState: ErrorState): boolean {
+            console.log(errorState)
+
+            const { DB, CDP, SystemI, Other } = errorState;
+
+            const isCDPError = isAllError(CDP);
+            const isSystemIError = isAllError(SystemI);
+
+            if(isCDPError && isSystemIError) {
+                if(errorMsg.includes('Not found data')) {
+                    setErrorMsg('Not found data from CDP and System-i');
+                } else if (errorMsg.includes('Connection issue')) {
+                    setErrorMsg('Connection issue from CDP and System-i');
+                }                
+            }
+
+            if (DB || Other || isCDPError) {
+                return false;
+            }
+
+            if (isSystemIError) {
+                return true;
+            }
+
+            return true;
+        }
+
+        const result = checkCustomerError(error);
+        setShowInfo(result);
+    }, [error]);
+
+
     const getCustomerInfo = () => {
-        axios.get('/dashboard/custinfo', {
-            headers: {
-                'Trace-ID': convertInfo.traceId
-            }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId, case: 500 }
-        })
-            .then((response: any) => {
-                const resp = response.data;
-
-                // mock data for test
-                // const resp = {
-                //     "national_id": "1100800391079",
-                //     "customer_name_eng": "MEENA TESTCDP",
-                //     "customer_name_th": "มีนา TESTCDP",
-                //     "mobile_no": "0982757360",
-                //     "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
-                //     "mail_to": "Home"
-                // }
-
-                setInfo(prev => ({
-                    ...prev,
-                    nationalID: resp.national_id,
-                    nameTH: resp.customer_name_th,
-                    nameEN: resp.customer_name_eng,
-                    mobileNo: resp.mobile_no,
-                    mailTo: resp.mail_to,
-                    address: resp.mail_to_address,
-                }));
+        return new Promise((resolve, reject) => {
+            axios.get('/dashboard/custinfo', {
+                headers: {
+                    'Trace-ID': convertInfo.traceId
+                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
             })
-            .catch((error: any) => {
-                console.error("Error:", error);
-                const err = error.response.data.error;
-                if (err.code === 'NOT_FOUND') {
-                    setErrorMsg(err.details.connector_api);
-                } else {
-                    setError(prev => ({
+                .then((response: any) => {
+                    const resp = response.data;
+
+                    // mock data for test
+                    // const resp = {
+                    //     "national_id": "1100800391079",
+                    //     "customer_name_eng": "MEENA TESTCDP",
+                    //     "customer_name_th": "มีนา TESTCDP",
+                    //     "mobile_no": "0982757360",
+                    //     "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
+                    //     "mail_to": "Home"
+                    // }
+
+                    setInfo(prev => ({
                         ...prev,
-                        Other: true,
+                        nationalID: resp.national_id,
+                        nameTH: resp.customer_name_th,
+                        nameEN: resp.customer_name_eng,
+                        mobileNo: resp.mobile_no,
+                        mailTo: resp.mail_to,
+                        address: resp.mail_to_address,
                     }));
-                    setErrorMsg(err.message);
-                }
-                setShowError(true);
-            })
+
+                    resolve(resp);
+                })
+                .catch((error: any) => {
+                    const err = error.response.data.error;
+                    reject(err);
+                })
+        });
     }
 
     const getCustomerSegment = () => {
-        // axios.get('/dashboard/custsegment', {
-        //     headers: {
-        //         'Trace-ID': convertInfo.current.traceId
-        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        // })
-        //     .then((response: any) => {
-        //         const resp = response.data;
+        return new Promise((resolve, reject) => {
+            axios.get('/dashboard/custsegment', {
+                headers: {
+                    'Trace-ID': convertInfo.traceId
+                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            })
+                .then((response: any) => {
+                    const resp = response.data;
 
-        // mock data for test
-        const resp = {
-            "sweetheart": "Sweetheart",
-            "complaint_level": "Complaint Level: 1",
-            "customer_group": "NORMAL - VIP Customer",
-            "complaint_group": "",
-            "customer_type": "VP",
-            "member_status": "NORMAL",
-            "customer_segment": "Existing Customer - Active",
-            "update_data": "01 Jan 0001"
-        }
+            // mock data for test
+            // const resp = {
+            //     "sweetheart": "Sweetheart",
+            //     "complaint_level": "Complaint Level: 1",
+            //     "customer_group": "NORMAL - VIP Customer",
+            //     "complaint_group": "",
+            //     "customer_type": "VP",
+            //     "member_status": "NORMAL",
+            //     "customer_segment": "Existing Customer - Active",
+            //     "update_data": "01 Jan 0001"
+            // }
 
-        setInfo(prev => ({
-            ...prev,
-            sweetheart: resp.sweetheart,
-            complaintLevel: resp.complaint_level,
-            customerGroup: resp.customer_group,
-            complaintGroup: resp.complaint_group,
-            customerType: resp.customer_type,
-            memberStatus: resp.member_status,
-            customerSegment: resp.customer_segment,
-            updateDate: resp.update_data,
-        }));
-        // })
-        // .catch((error: any) => {
-        //     console.error("Error:", error);
-        // })
+            setInfo(prev => ({
+                ...prev,
+                sweetheart: resp.sweetheart,
+                complaintLevel: resp.complaint_level,
+                customerGroup: resp.customer_group,
+                complaintGroup: resp.complaint_group,
+                customerType: resp.customer_type,
+                memberStatus: resp.member_status,
+                customerSegment: resp.customer_segment,
+                updateDate: resp.update_data,
+            }));
+
+            resolve(resp);
+            })
+            .catch((error: any) => {
+                const err = error.response.data.error;
+                reject(err);
+            })
+        });
     }
 
     const getCustomerProfile = () => {
-        // axios.get('/dashboard/custprofile', {
-        //     headers: {
-        //         'Trace-ID': convertInfo.current.traceId
-        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        // })
-        //     .then((response: any) => {
-        //         const resp = response.data;
+        return new Promise((resolve, reject) => {
+            axios.get('/dashboard/custprofile', {
+                headers: {
+                    'Trace-ID': convertInfo.traceId
+                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            })
+                .then((response: any) => {
+                    const resp = response.data;
 
-        // mock data for test
-        const resp = {
-            "error_system": null,
-            "last_card_apply_date": "25 Aug 2023",
-            "customer_sentiment": "",
-            "phone_no_last_update_date": "01 Aug 2024",
-            "last_increase_credit_limit_update": "29 Aug 2023",
-            "last_reduce_credit_limit_update": "01 Jan 0001",
-            "last_income_update": "29 Aug 2023",
-            "suggested_action": "",
-            "type_of_job": "",
-            "marital_status": "",
-            "gender": "",
-            "last_e_statement_sent_date": "01 Jan 0001",
-            "e_statement_sent_status": "",
-            "statement_channel": "",
-            "consent_for_disclose": "",
-            "block_media": "No blocked",
-            "consent_for_collect_use": "Incomplete",
-            "payment_status": "On time",
-            "day_past_due": "",
-            "last_overdue_date": "-"
-        }
+            // mock data for test
+            // const resp = {
+            //     "error_system": null,
+            //     "last_card_apply_date": "25 Aug 2023",
+            //     "customer_sentiment": "",
+            //     "phone_no_last_update_date": "01 Aug 2024",
+            //     "last_increase_credit_limit_update": "29 Aug 2023",
+            //     "last_reduce_credit_limit_update": "01 Jan 0001",
+            //     "last_income_update": "29 Aug 2023",
+            //     "suggested_action": "",
+            //     "type_of_job": "",
+            //     "marital_status": "",
+            //     "gender": "",
+            //     "last_e_statement_sent_date": "01 Jan 0001",
+            //     "e_statement_sent_status": "",
+            //     "statement_channel": "",
+            //     "consent_for_disclose": "",
+            //     "block_media": "No blocked",
+            //     "consent_for_collect_use": "Incomplete",
+            //     "payment_status": "On time",
+            //     "day_past_due": "",
+            //     "last_overdue_date": "-"
+            // }
 
-        setInfo(prev => ({
-            ...prev,
-            lastCardApply: resp.last_card_apply_date,
-            mobileNoDesc: resp.phone_no_last_update_date,
-            lastIncreaseLimit: resp.last_increase_credit_limit_update,
-            lastReduceLimit: resp.last_reduce_credit_limit_update,
-            lastIncome: resp.last_income_update,
-            suggestAction: resp.suggested_action || 'no suggest action',
-            typeOfJob: resp.type_of_job,
-            MaritalStatus: resp.marital_status,
-            gender: resp.gender,
-            lastStatementSentDate: resp.last_e_statement_sent_date,
-            statementSentStatus: resp.e_statement_sent_status,
-            statementChannel: resp.statement_channel,
-            consentForDisclose: resp.consent_for_disclose,
-            blockedMedia: resp.block_media,
-            consentForCollect: resp.consent_for_collect_use,
-            paymentStatus: resp.payment_status,
-            dayPastDue: resp.day_past_due || "0",
-            lastOverDueDate: resp.last_overdue_date,
-        }));
-        // })
-        // .catch((error: any) => {
-        //     console.error("Error:", error);
-        //     const err = error.response.data.error;
-        //     if (err.code === 'NOT_FOUND') {
-        //         setError(prev => ({
-        //             ...prev,
-        //             SystemI: true,
-        //         }));
-        //         setErrorMsg(err.details.connector_api);
-        //     } else {
-        //         setErrorMsg(err.details.message);
-        //     }
-        // })
+            setInfo(prev => ({
+                ...prev,
+                lastCardApply: resp.last_card_apply_date,
+                mobileNoDesc: resp.phone_no_last_update_date,
+                lastIncreaseLimit: resp.last_increase_credit_limit_update,
+                lastReduceLimit: resp.last_reduce_credit_limit_update,
+                lastIncome: resp.last_income_update,
+                suggestAction: resp.suggested_action || 'no suggest action',
+                typeOfJob: resp.type_of_job,
+                MaritalStatus: resp.marital_status,
+                gender: resp.gender,
+                lastStatementSentDate: resp.last_e_statement_sent_date,
+                statementSentStatus: resp.e_statement_sent_status,
+                statementChannel: resp.statement_channel,
+                consentForDisclose: resp.consent_for_disclose,
+                blockedMedia: resp.block_media,
+                consentForCollect: resp.consent_for_collect_use,
+                paymentStatus: resp.payment_status,
+                dayPastDue: resp.day_past_due || "0",
+                lastOverDueDate: resp.last_overdue_date,
+            }));
+
+            resolve(resp);
+            })
+            .catch((error: any) => {
+                const err = error.response.data.error;
+                reject(err);
+            })
+        });
     }
 
     const getSuggestion = () => {
-        // axios.get('/dashboard/suggestion', {
-        //     headers: {
-        //         'Trace-ID': convertInfo.current.traceId
-        //     }, params: { aeon_id: convertInfo.current.aeonId, cust_id: convertInfo.current.customerId }
-        // })
-        //     .then((response: any) => {
-        //         const resp = response.data;
+        return new Promise((resolve, reject) => {
+            axios.get('/dashboard/suggestion', {
+                headers: {
+                    'Trace-ID': convertInfo.traceId
+                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            })
+                .then((response: any) => {
+                    const resp = response.data;
 
-        // mock data for test
-        const resp = {
-            "suggest_cards": [
-                "Club Thailand JCB Card​",
-                "Club Thailand Mastercard​",
-                "Club Thailand Visa Card"
-            ],
-            "suggest_promotions": [
-                {
-                    "promotion_code": "P24099EEBE",
-                    "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
-                    "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
-                    "action": "test",
-                    "promotion_result_timestamp": "25 Mar 2025, 14.24",
-                    "period": "4 Sep 2024 - 31 Aug 2025",
-                    "eligible_card": [
-                        "BIG C WORLD MASTERCARD"
-                    ]
-                },
-                {
-                    "promotion_code": "P240362142",
-                    "promotion_name": "buy insurance web aeon",
-                    "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
-                    "action": "Acknowledged",
-                    "promotion_result_timestamp": "25 Feb 2025, 13.19",
-                    "period": "21 Mar 2024 - 31 Dec 2025",
-                    "eligible_card": [
-                        "JCB CARD"
-                    ]
-                },
-                {
-                    "promotion_code": "P2409CB775",
-                    "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
-                    "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
-                    "action": "Acknowledged",
-                    "promotion_result_timestamp": "17 Feb 2025, 16.01",
-                    "period": "25 Sep 2024 - 30 Sep 2025",
-                    "eligible_card": [
-                        "AEON ROP WORLD MASTER CARD",
-                        "VISA CARD"
-                    ]
-                }
-            ]
-        }
+            // mock data for test
+            // const resp = {
+            //     "suggest_cards": [
+            //         "Club Thailand JCB Card​",
+            //         "Club Thailand Mastercard​",
+            //         "Club Thailand Visa Card"
+            //     ],
+            //     "suggest_promotions": [
+            //         {
+            //             "promotion_code": "P24099EEBE",
+            //             "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
+            //             "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
+            //             "action": "test",
+            //             "promotion_result_timestamp": "25 Mar 2025, 14.24",
+            //             "period": "4 Sep 2024 - 31 Aug 2025",
+            //             "eligible_card": [
+            //                 "BIG C WORLD MASTERCARD"
+            //             ]
+            //         },
+            //         {
+            //             "promotion_code": "P240362142",
+            //             "promotion_name": "buy insurance web aeon",
+            //             "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
+            //             "action": "Acknowledged",
+            //             "promotion_result_timestamp": "25 Feb 2025, 13.19",
+            //             "period": "21 Mar 2024 - 31 Dec 2025",
+            //             "eligible_card": [
+            //                 "JCB CARD"
+            //             ]
+            //         },
+            //         {
+            //             "promotion_code": "P2409CB775",
+            //             "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
+            //             "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
+            //             "action": "Acknowledged",
+            //             "promotion_result_timestamp": "17 Feb 2025, 16.01",
+            //             "period": "25 Sep 2024 - 30 Sep 2025",
+            //             "eligible_card": [
+            //                 "AEON ROP WORLD MASTER CARD",
+            //                 "VISA CARD"
+            //             ]
+            //         }
+            //     ]
+            // }
 
-        setInfo(prev => ({
-            ...prev,
-            suggestCards: resp.suggest_cards,
-            suggestPromotions: resp.suggest_promotions.length > 0 ?
-                resp.suggest_promotions.map((item: any) => ({
-                    code: item.promotion_code,
-                    name: item.promotion_name,
-                    detail: item.promotion_details,
-                    action: item.action,
-                    resultTimestamp: item.promotion_result_timestamp,
-                    period: item.period,
-                    eligibleCard: item.eligible_card,
-                    offerResult: null,
-                }))
-                : []
-        }));
-        // })
-        // .catch((error: any) => {
-        //     console.error("Error:", error);
-        // })
+            setInfo(prev => ({
+                ...prev,
+                suggestCards: resp.suggest_cards,
+                suggestPromotions: resp.suggest_promotions.length > 0 ?
+                    resp.suggest_promotions.map((item: any) => ({
+                        code: item.promotion_code,
+                        name: item.promotion_name,
+                        detail: item.promotion_details,
+                        action: item.action,
+                        resultTimestamp: item.promotion_result_timestamp,
+                        period: item.period,
+                        eligibleCard: item.eligible_card,
+                        offerResult: null,
+                    }))
+                    : []
+            }));
+
+            resolve(resp);
+            })
+            .catch((error: any) => {
+                const err = error.response.data.error;
+                reject(err);
+            })
+        });
     }
 
     const suggestCards = () => {
@@ -523,7 +622,7 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value as COfferResult;
+        const value = e.target.value as OfferResult;
 
         const updatedPromotion = {
             ...selectedPromotion!,
@@ -683,20 +782,20 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
     return !isLoading ? (
         <div className="bg-whit c360-wrp">
             {/* error msg */}
-            {showError && (
+            {errorMsg && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
-                    <div>{errorMsg} {!error.DB && `(Trace ID: ${convertInfo.traceId}).`}</div>
+                    <div>{errorMsg} {!error.DB && `(Trace ID: ${convertInfo.traceId})`}</div>
                 </Alert>
             )}
 
             {/* card 1 */}
-            {(!error.DB && !error.Other) && (
+            {showInfo && (
                 <div>
                     <Row className="shadow-sm info-top gx-0 bg-purple-gradient">
                         <Col xs={10} className="text-start fw-bold">
                             <div className="fs-4 text-purple">{info.nameTH}</div>
                             <div className="fs-4 mb-3 text-purple">{info.nameEN}</div>
-                            <div>National ID: <span className="fw-light">{info.nationalID}</span></div>
+                            {info.nationalID && (<div>National ID: <span className="fw-light">{info.nationalID}</span></div>)}
                         </Col>
                         <Col xs={2} className="text-start fw-bold text-center">
                             <div className="mb-2">{info.sweetheart}</div>
