@@ -11,7 +11,7 @@ import Alert from 'react-bootstrap/Alert';
 import BaseModal from "@/components/modals/BaseModal";
 
 // composable
-import { useConvertId, IconvertInfo } from '@/composables/convertId'
+import { useConvertId } from '@/composables/convertId'
 
 // context
 import { useLoader } from '@/contexts/LoaderContext';
@@ -19,90 +19,28 @@ import { useLoader } from '@/contexts/LoaderContext';
 // redux
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setConvertInfo } from '@/store/slices/convertInfoSlice';
+import { setCustomerInfo, COfferResult, IPromotion, ICustomerInfo } from '@/store/slices/customerInfoSlice';
 
 // api
 import axios from '@axios';
 
-enum OfferResult {
-    Acknowledged = 'Acknowledged',
-    Interested = 'Interested',
-    NotInterested = 'Not Interested',
-}
 
-interface Promotion {
-    code: string;
-    name: string;
-    detail: string;
-    action: string;
-    resultTimestamp: string;
-    period: string;
-    eligibleCard: string[];
-    offerResult: OfferResult | null;
-}
-
-interface Info {
-    updateDate: string;
-    // card 1
-    nameTH: string;
-    nameEN: string;
-    nationalID: string;
-    sweetheart: string;
-    complaintLevel: string;
-    // card 2
-    customerGroup: string;
-    complaintGroup: string;
-    customerType: string;
-    memberStatus: string;
-    customerSegment: string;
-    // card 3
-    mobileNo: string;
-    mobileNoDesc: string;
-    mailTo: string;
-    address: string;
-    gender: string;
-    MaritalStatus: string;
-    typeOfJob: string;
-    // card 4
-    statementChannel: string;
-    lastStatementSentDate: string;
-    statementSentStatus: string;
-    // card 5
-    lastIncreaseLimit: string;
-    lastReduceLimit: string;
-    lastIncome: string;
-    lastCardApply: string;
-    // card 6
-    consentForCollect: string;
-    consentForDisclose: string;
-    blockedMedia: string;
-    // card 7
-    suggestAction: string;
-    // card 8
-    paymentStatus: string;
-    dayPastDue: string;
-    lastOverDueDate: string;
-    // card 9
-    suggestCards: string[];
-    // card 10
-    suggestPromotions: Promotion[]
-}
-
-interface C360TabsProps {
+interface IC360TabsProps {
     shouldFetch: boolean;
 }
 
-interface ErrorState {
+interface IErrorState {
     DB: boolean;         // true = error
     CDP: boolean[];      // ต้องครบ 3 เส้นถึงจะเป็น error (CustSegment, Suggestion, CustProfile)
     SystemI: boolean[];  // ต้องครบ 2 เส้นถึงจะเป็น error (CustInfo, CustProfile)
     Other: boolean;
 }
 
-const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
+const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch }) => {
     const location = useLocation();
 
     const [showModal, setShowModal] = useState(false);
-    const [selectedPromotion, setSelectedPromotion] = useState<Promotion | null>(null);
+    const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
 
     const [errorMsg, setErrorMsg] = useState<string>('');
     const [showInfo, setShowInfo] = useState<boolean>(true);
@@ -112,15 +50,18 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
 
     const dispatch = useAppDispatch();
     const convertInfo = useAppSelector(state => state.convertInfo);
+    // const customerInfo = useAppSelector(state => state.customerInfo);
 
-    const [error, setError] = useState<ErrorState>({
+    const containerRef = useRef<HTMLDivElement>(null);
+
+    const [error, setError] = useState<IErrorState>({
         DB: false,
         CDP: [false, false, false],
         SystemI: [false, false],
         Other: false,
     });
 
-    const [info, setInfo] = useState<Info>({
+    const [customerInfo, setCustomerInfo] = useState<ICustomerInfo>({
         updateDate: '',
         // card 1
         nameTH: '',
@@ -215,9 +156,9 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
                 setErrorMsg('');
                 let firstErrorMsg = '';
 
-                const handleApiError = (category: keyof ErrorState, msg: string) => {
+                const handleApiError = (category: keyof IErrorState, msg: string) => {
                     setError(prev => {
-                        const updatedError = { ...prev } as ErrorState;
+                        const updatedError = { ...prev } as IErrorState;
 
                         if (Array.isArray(prev[category])) {
                             const arr = [...(prev[category] as boolean[])];
@@ -297,7 +238,7 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
     useEffect(() => {
         const isAllError = (errors: boolean[]): boolean => errors.every(error => error);
 
-        function checkCustomerError(errorState: ErrorState): boolean {
+        function checkCustomerError(errorState: IErrorState): boolean {
             console.log(errorState)
 
             const { DB, CDP, SystemI, Other } = errorState;
@@ -331,25 +272,25 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
 
     const getCustomerInfo = () => {
         return new Promise((resolve, reject) => {
-            axios.get('/dashboard/custinfo', {
-                headers: {
-                    'Trace-ID': convertInfo.traceId
-                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
-            })
-                .then((response: any) => {
-                    const resp = response.data;
+            // axios.get('/dashboard/custinfo', {
+            //     headers: {
+            //         'Trace-ID': convertInfo.traceId
+            //     }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            // })
+            //     .then((response: any) => {
+            //         const resp = response.data;
 
                     // mock data for test
-                    // const resp = {
-                    //     "national_id": "1100800391079",
-                    //     "customer_name_eng": "MEENA TESTCDP",
-                    //     "customer_name_th": "มีนา TESTCDP",
-                    //     "mobile_no": "0982757360",
-                    //     "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
-                    //     "mail_to": "Home"
-                    // }
+                    const resp = {
+                        "national_id": "1100800391079",
+                        "customer_name_eng": "MEENA TESTCDP",
+                        "customer_name_th": "มีนา TESTCDP",
+                        "mobile_no": "0982757360",
+                        "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
+                        "mail_to": "Home"
+                    }
 
-                    setInfo(prev => ({
+                    setCustomerInfo(prev => ({
                         ...prev,
                         nationalID: resp.national_id,
                         nameTH: resp.customer_name_th,
@@ -360,37 +301,37 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
                     }));
 
                     resolve(resp);
-                })
-                .catch((error: any) => {
-                    const err = error.response.data.error;
-                    reject(err);
-                })
+                // })
+                // .catch((error: any) => {
+                //     const err = error.response.data.error;
+                //     reject(err);
+                // })
         });
     }
 
     const getCustomerSegment = () => {
         return new Promise((resolve, reject) => {
-            axios.get('/dashboard/custsegment', {
-                headers: {
-                    'Trace-ID': convertInfo.traceId
-                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
-            })
-                .then((response: any) => {
-                    const resp = response.data;
+            // axios.get('/dashboard/custsegment', {
+            //     headers: {
+            //         'Trace-ID': convertInfo.traceId
+            //     }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            // })
+            //     .then((response: any) => {
+            //         const resp = response.data;
 
             // mock data for test
-            // const resp = {
-            //     "sweetheart": "Sweetheart",
-            //     "complaint_level": "Complaint Level: 1",
-            //     "customer_group": "NORMAL - VIP Customer",
-            //     "complaint_group": "",
-            //     "customer_type": "VP",
-            //     "member_status": "NORMAL",
-            //     "customer_segment": "Existing Customer - Active",
-            //     "update_data": "01 Jan 0001"
-            // }
+            const resp = {
+                "sweetheart": "Sweetheart",
+                "complaint_level": "Complaint Level: 1",
+                "customer_group": "NORMAL - VIP Customer",
+                "complaint_group": "",
+                "customer_type": "VP",
+                "member_status": "NORMAL",
+                "customer_segment": "Existing Customer - Active",
+                "update_data": "01 Jan 0001"
+            }
 
-            setInfo(prev => ({
+            setCustomerInfo(prev => ({
                 ...prev,
                 sweetheart: resp.sweetheart,
                 complaintLevel: resp.complaint_level,
@@ -403,49 +344,49 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
             }));
 
             resolve(resp);
-            })
-            .catch((error: any) => {
-                const err = error.response.data.error;
-                reject(err);
-            })
+            // })
+            // .catch((error: any) => {
+            //     const err = error.response.data.error;
+            //     reject(err);
+            // })
         });
     }
 
     const getCustomerProfile = () => {
         return new Promise((resolve, reject) => {
-            axios.get('/dashboard/custprofile', {
-                headers: {
-                    'Trace-ID': convertInfo.traceId
-                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
-            })
-                .then((response: any) => {
-                    const resp = response.data;
+            // axios.get('/dashboard/custprofile', {
+            //     headers: {
+            //         'Trace-ID': convertInfo.traceId
+            //     }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            // })
+            //     .then((response: any) => {
+            //         const resp = response.data;
 
             // mock data for test
-            // const resp = {
-            //     "error_system": null,
-            //     "last_card_apply_date": "25 Aug 2023",
-            //     "customer_sentiment": "",
-            //     "phone_no_last_update_date": "01 Aug 2024",
-            //     "last_increase_credit_limit_update": "29 Aug 2023",
-            //     "last_reduce_credit_limit_update": "01 Jan 0001",
-            //     "last_income_update": "29 Aug 2023",
-            //     "suggested_action": "",
-            //     "type_of_job": "",
-            //     "marital_status": "",
-            //     "gender": "",
-            //     "last_e_statement_sent_date": "01 Jan 0001",
-            //     "e_statement_sent_status": "",
-            //     "statement_channel": "",
-            //     "consent_for_disclose": "",
-            //     "block_media": "No blocked",
-            //     "consent_for_collect_use": "Incomplete",
-            //     "payment_status": "On time",
-            //     "day_past_due": "",
-            //     "last_overdue_date": "-"
-            // }
+            const resp = {
+                "error_system": null,
+                "last_card_apply_date": "25 Aug 2023",
+                "customer_sentiment": "",
+                "phone_no_last_update_date": "01 Aug 2024",
+                "last_increase_credit_limit_update": "29 Aug 2023",
+                "last_reduce_credit_limit_update": "01 Jan 0001",
+                "last_income_update": "29 Aug 2023",
+                "suggested_action": "",
+                "type_of_job": "",
+                "marital_status": "",
+                "gender": "",
+                "last_e_statement_sent_date": "01 Jan 0001",
+                "e_statement_sent_status": "",
+                "statement_channel": "",
+                "consent_for_disclose": "",
+                "block_media": "No blocked",
+                "consent_for_collect_use": "Incomplete",
+                "payment_status": "On time",
+                "day_past_due": "",
+                "last_overdue_date": "-"
+            }
 
-            setInfo(prev => ({
+            setCustomerInfo(prev => ({
                 ...prev,
                 lastCardApply: resp.last_card_apply_date,
                 mobileNoDesc: resp.phone_no_last_update_date,
@@ -468,70 +409,70 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
             }));
 
             resolve(resp);
-            })
-            .catch((error: any) => {
-                const err = error.response.data.error;
-                reject(err);
-            })
+            // })
+            // .catch((error: any) => {
+            //     const err = error.response.data.error;
+            //     reject(err);
+            // })
         });
     }
 
     const getSuggestion = () => {
         return new Promise((resolve, reject) => {
-            axios.get('/dashboard/suggestion', {
-                headers: {
-                    'Trace-ID': convertInfo.traceId
-                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
-            })
-                .then((response: any) => {
-                    const resp = response.data;
+            // axios.get('/dashboard/suggestion', {
+            //     headers: {
+            //         'Trace-ID': convertInfo.traceId
+            //     }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            // })
+            //     .then((response: any) => {
+            //         const resp = response.data;
 
             // mock data for test
-            // const resp = {
-            //     "suggest_cards": [
-            //         "Club Thailand JCB Card​",
-            //         "Club Thailand Mastercard​",
-            //         "Club Thailand Visa Card"
-            //     ],
-            //     "suggest_promotions": [
-            //         {
-            //             "promotion_code": "P24099EEBE",
-            //             "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
-            //             "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
-            //             "action": "test",
-            //             "promotion_result_timestamp": "25 Mar 2025, 14.24",
-            //             "period": "4 Sep 2024 - 31 Aug 2025",
-            //             "eligible_card": [
-            //                 "BIG C WORLD MASTERCARD"
-            //             ]
-            //         },
-            //         {
-            //             "promotion_code": "P240362142",
-            //             "promotion_name": "buy insurance web aeon",
-            //             "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
-            //             "action": "Acknowledged",
-            //             "promotion_result_timestamp": "25 Feb 2025, 13.19",
-            //             "period": "21 Mar 2024 - 31 Dec 2025",
-            //             "eligible_card": [
-            //                 "JCB CARD"
-            //             ]
-            //         },
-            //         {
-            //             "promotion_code": "P2409CB775",
-            //             "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
-            //             "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
-            //             "action": "Acknowledged",
-            //             "promotion_result_timestamp": "17 Feb 2025, 16.01",
-            //             "period": "25 Sep 2024 - 30 Sep 2025",
-            //             "eligible_card": [
-            //                 "AEON ROP WORLD MASTER CARD",
-            //                 "VISA CARD"
-            //             ]
-            //         }
-            //     ]
-            // }
+            const resp = {
+                "suggest_cards": [
+                    "Club Thailand JCB Card​",
+                    "Club Thailand Mastercard​",
+                    "Club Thailand Visa Card"
+                ],
+                "suggest_promotions": [
+                    {
+                        "promotion_code": "P24099EEBE",
+                        "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
+                        "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
+                        "action": "test",
+                        "promotion_result_timestamp": "25 Mar 2025, 14.24",
+                        "period": "4 Sep 2024 - 31 Aug 2025",
+                        "eligible_card": [
+                            "BIG C WORLD MASTERCARD"
+                        ]
+                    },
+                    {
+                        "promotion_code": "P240362142",
+                        "promotion_name": "buy insurance web aeon",
+                        "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
+                        "action": "Acknowledged",
+                        "promotion_result_timestamp": "25 Feb 2025, 13.19",
+                        "period": "21 Mar 2024 - 31 Dec 2025",
+                        "eligible_card": [
+                            "JCB CARD"
+                        ]
+                    },
+                    {
+                        "promotion_code": "P2409CB775",
+                        "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
+                        "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
+                        "action": "Acknowledged",
+                        "promotion_result_timestamp": "17 Feb 2025, 16.01",
+                        "period": "25 Sep 2024 - 30 Sep 2025",
+                        "eligible_card": [
+                            "AEON ROP WORLD MASTER CARD",
+                            "VISA CARD"
+                        ]
+                    }
+                ]
+            }
 
-            setInfo(prev => ({
+            setCustomerInfo(prev => ({
                 ...prev,
                 suggestCards: resp.suggest_cards,
                 suggestPromotions: resp.suggest_promotions.length > 0 ?
@@ -549,19 +490,19 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
             }));
 
             resolve(resp);
-            })
-            .catch((error: any) => {
-                const err = error.response.data.error;
-                reject(err);
-            })
+            // })
+            // .catch((error: any) => {
+            //     const err = error.response.data.error;
+            //     reject(err);
+            // })
         });
     }
 
     const suggestCards = () => {
         return (
             <div>
-                {info.suggestCards.length > 0 ? (
-                    info.suggestCards.map((card, index) => (
+                {customerInfo.suggestCards.length > 0 ? (
+                    customerInfo.suggestCards.map((card, index) => (
                         <div key={index}>• {card}</div>
                     ))
                 ) : (
@@ -574,10 +515,10 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
     const suggestPromotions = () => {
         return (
             <div>
-                {info.suggestPromotions.length > 0 ? (
+                {customerInfo.suggestPromotions.length > 0 ? (
                     <div>
                         <Carousel interval={5000} className="rounded-4 overflow-hidden shadow-sm bg-light">
-                            {info.suggestPromotions.map((item) => (
+                            {customerInfo.suggestPromotions.map((item) => (
                                 <Carousel.Item key={item.code}>
                                     <div
                                         className="d-flex flex-column promotion-wrp bg-purple-gradient"
@@ -622,7 +563,7 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
 
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        const value = e.target.value as OfferResult;
+        const value = e.target.value as COfferResult;
 
         const updatedPromotion = {
             ...selectedPromotion!,
@@ -690,31 +631,30 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
             {
                 aeon_id: convertInfo.aeonId,
                 promotion_code: selectedPromotion?.code,
-                promotion_result: selectedPromotion?.offerResult
+                promotion_result: selectedPromotion?.offerResult,                
             },
             {
                 headers: {
                     'Trace-ID': convertInfo.traceId
-                }
+                },  params: {case: 500}
             }
         )
             .then((response: any) => {
-                const resp = response.data;
-
-                setInfo(prev => ({
-                    ...prev,
-                    nationalID: resp.national_id,
-                    nameTH: resp.customer_name_th,
-                    nameEN: resp.customer_name_eng,
-                    mobileNo: resp.mobile_no,
-                    mailTo: resp.mail_to,
-                    address: resp.mail_to_address,
-                }));
-
                 setShowModal(false);
             })
             .catch((error: any) => {
-                console.error("Error:", error);
+                console.error("offeresult error:", error);
+
+                const err = error.response.data.error;
+                if(err.code === 'NOT_FOUND' || err.code === 'NO_RESPONSE') {
+                    setErrorMsg(err.details.td)
+                } else {
+                    setErrorMsg(err.message)
+                }
+
+                setShowModal(false);
+                containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                
             })
             .finally(() => {
 
@@ -780,7 +720,7 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
     };
 
     return !isLoading ? (
-        <div className="bg-whit c360-wrp">
+        <div className="bg-whit c360-wrp" ref={containerRef}>
             {/* error msg */}
             {errorMsg && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
@@ -793,133 +733,133 @@ const C360Tabs: React.FC<C360TabsProps> = ({ shouldFetch }) => {
                 <div>
                     <Row className="shadow-sm info-top gx-0 bg-purple-gradient">
                         <Col xs={10} className="text-start fw-bold">
-                            <div className="fs-4 text-purple">{info.nameTH}</div>
-                            <div className="fs-4 mb-3 text-purple">{info.nameEN}</div>
-                            {info.nationalID && (<div>National ID: <span className="fw-light">{info.nationalID}</span></div>)}
+                            <div className="fs-4 text-purple">{customerInfo.nameTH}</div>
+                            <div className="fs-4 mb-3 text-purple">{customerInfo.nameEN}</div>
+                            {customerInfo.nationalID && (<div>National ID: <span className="fw-light">{customerInfo.nationalID}</span></div>)}
                         </Col>
                         <Col xs={2} className="text-start fw-bold text-center">
-                            <div className="mb-2">{info.sweetheart}</div>
-                            <div className={`d-inline-block rounded-4 text-light px-4 py-2 shadow-sm w-100 ${getComplaintLevelColor(info.complaintLevel)}`}>
-                                {info.complaintLevel || '-'}
+                            <div className="mb-2">{customerInfo.sweetheart}</div>
+                            <div className={`d-inline-block rounded-4 text-light px-4 py-2 shadow-sm w-100 ${getComplaintLevelColor(customerInfo.complaintLevel)}`}>
+                                {customerInfo.complaintLevel || '-'}
                             </div>
                         </Col>
                     </Row>
                     <div className="px-5 py-4 d-flex flex-column gap-3">
 
                         {/* update date */}
-                        <div className="text-end text-secondary">CDP data update as of <span className="fw-bold">{info.updateDate}</span></div>
+                        <div className="text-end text-secondary">CDP data update as of <span className="fw-bold">{customerInfo.updateDate}</span></div>
                         {/* card 2 */}
                         <div className="rounded-4 bg-light p-4 text-start shadow-sm">
                             <Row className="fs-4 fw-bold mb-3">
                                 <Col xs={4}>Customer Group:</Col>
-                                <Col xs={8}>{handleCustomerGroup(info.customerGroup)}</Col>
+                                <Col xs={8}>{handleCustomerGroup(customerInfo.customerGroup)}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Complaint Group:</Col>
-                                <Col xs={8}>{info.complaintGroup}</Col>
+                                <Col xs={8}>{customerInfo.complaintGroup}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Customer Type:</Col>
-                                <Col xs={8}>{info.customerType}</Col>
+                                <Col xs={8}>{customerInfo.customerType}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Member Status:</Col>
-                                <Col xs={8}>{info.memberStatus}</Col>
+                                <Col xs={8}>{customerInfo.memberStatus}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Customer Segment:</Col>
-                                <Col xs={8}>{info.customerSegment}</Col>
+                                <Col xs={8}>{customerInfo.customerSegment}</Col>
                             </Row>
                         </div>
                         {/* card 3 */}
                         <div className="rounded-4 bg-light p-4 text-start shadow-sm">
                             <Row>
                                 <Col xs={4} className="fw-bold">Phone No.:</Col>
-                                <Col xs={8}>{info.mobileNo} ({info.mobileNoDesc})</Col>
+                                <Col xs={8}>{customerInfo.mobileNo} ({customerInfo.mobileNoDesc})</Col>
                             </Row>
                             {
                                 (location.pathname === '/c360') && (<Row>
                                     <Col xs={4} className="fw-bold">Calling phone:</Col>
-                                    <Col xs={8} className={`${getCallingPhoneColor(info.mobileNo)}`}>value7</Col>
+                                    <Col xs={8} className={`${getCallingPhoneColor(customerInfo.mobileNo)}`}>value7</Col>
                                 </Row>)
                             }
                             <Row>
-                                <Col xs={4} className="fw-bold">Mail-to-{info.mailTo}:</Col>
-                                <Col xs={8}>{info.address}</Col>
+                                <Col xs={4} className="fw-bold">Mail-to-{customerInfo.mailTo}:</Col>
+                                <Col xs={8}>{customerInfo.address}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Gender:</Col>
-                                <Col xs={8}>{info.gender}</Col>
+                                <Col xs={8}>{customerInfo.gender}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Marital Status:</Col>
-                                <Col xs={8}>{info.MaritalStatus}</Col>
+                                <Col xs={8}>{customerInfo.MaritalStatus}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Type of Job:</Col>
-                                <Col xs={8}>{info.typeOfJob}</Col>
+                                <Col xs={8}>{customerInfo.typeOfJob}</Col>
                             </Row>
                         </div>
                         {/* card 4 */}
                         <div className="rounded-4 bg-light p-4 text-start shadow-sm">
                             <Row>
                                 <Col xs={4} className="fw-bold">Statement Channel:</Col>
-                                <Col xs={8}>{info.statementChannel}</Col>
+                                <Col xs={8}>{customerInfo.statementChannel}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Last e-statement sent date:</Col>
-                                <Col xs={8}>{info.lastStatementSentDate}</Col>
+                                <Col xs={8}>{customerInfo.lastStatementSentDate}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">E-statement sent status:</Col>
-                                <Col xs={8}>{info.statementSentStatus}</Col>
+                                <Col xs={8}>{customerInfo.statementSentStatus}</Col>
                             </Row>
                         </div>
                         {/* card 5 */}
                         <div className="rounded-4 bg-light p-4 text-start shadow-sm">
                             <Row>
                                 <Col xs={4} className="fw-bold">Last Increase limit Update:</Col>
-                                <Col xs={8}>{info.lastIncreaseLimit}</Col>
+                                <Col xs={8}>{customerInfo.lastIncreaseLimit}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Last Reduce limit Update:</Col>
-                                <Col xs={8}>{info.lastReduceLimit}</Col>
+                                <Col xs={8}>{customerInfo.lastReduceLimit}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Last Income Update:</Col>
-                                <Col xs={8}>{info.lastIncome}</Col>
+                                <Col xs={8}>{customerInfo.lastIncome}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Last Card Apply Date:</Col>
-                                <Col xs={8}>{info.lastCardApply}</Col>
+                                <Col xs={8}>{customerInfo.lastCardApply}</Col>
                             </Row>
                         </div>
                         {/* card 6 */}
                         <div className="rounded-4 bg-light p-4 text-start shadow-sm">
                             <Row>
                                 <Col xs={4} className="fw-bold">Consent for collect & use:</Col>
-                                <Col xs={8}>{info.consentForCollect}</Col>
+                                <Col xs={8}>{customerInfo.consentForCollect}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Consent for disclose:</Col>
-                                <Col xs={8}>{info.consentForDisclose}</Col>
+                                <Col xs={8}>{customerInfo.consentForDisclose}</Col>
                             </Row>
                             <Row>
                                 <Col xs={4} className="fw-bold">Blocked Media:</Col>
-                                <Col xs={8}>{info.blockedMedia}</Col>
+                                <Col xs={8}>{customerInfo.blockedMedia}</Col>
                             </Row>
                         </div>
                         {/* card 7 */}
                         <div className="rounded-4 p-4 bg-yellow shadow-sm">
                             <div className="fw-bold fs-4 pb-3">Suggest Action</div>
-                            <div>{info.suggestAction}</div>
+                            <div>{customerInfo.suggestAction}</div>
                         </div>
                         {/* card 8 */}
                         <div className="rounded-4 bg-light p-4 shadow-sm">
-                            <div className="fw-bold fs-5 pb-3">Payment Status: <span className={`${getPaymentStatusColor(info.paymentStatus)}`}>{info.paymentStatus}</span></div>
+                            <div className="fw-bold fs-5 pb-3">Payment Status: <span className={`${getPaymentStatusColor(customerInfo.paymentStatus)}`}>{customerInfo.paymentStatus}</span></div>
                             <div className="d-flex justify-content-center">
-                                <div className="me-5"><span className="fw-bold me-3">Day Past Due: </span >{info.dayPastDue} days</div>
-                                <div className="ms-5"><span className="fw-bold me-3">Last Overdue Date: </span >{info.lastOverDueDate || '-'}</div>
+                                <div className="me-5"><span className="fw-bold me-3">Day Past Due: </span >{customerInfo.dayPastDue} days</div>
+                                <div className="ms-5"><span className="fw-bold me-3">Last Overdue Date: </span >{customerInfo.lastOverDueDate || '-'}</div>
                             </div>
                         </div>
                         {/* card 9, 10 */}

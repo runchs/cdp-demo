@@ -4,13 +4,6 @@ import { useLoader } from '@/contexts/LoaderContext';
 import { useCallback } from 'react';
 import { IConvertInfo } from '@/store/slices/convertInfoSlice'
 
-export interface IconvertInfo {
-    aeonId: string;
-    customerId: string;
-    traceId: string;
-    user?: string;
-}
-
 export const useConvertId = () => {
     const { setIsLoading } = useLoader();
 

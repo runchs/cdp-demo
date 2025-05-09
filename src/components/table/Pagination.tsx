@@ -9,12 +9,12 @@ export interface IPagination {
     perPage?: number;
 }
 
-interface TablePaginationProps {
+interface ITablePaginationProps {
     pagination: IPagination;
     onPageChange?: (page: number) => void;
 }
 
-const BasePagination: React.FC<TablePaginationProps> = ({
+const BasePagination: React.FC<ITablePaginationProps> = ({
     pagination={
         currentPage: 0,
         totalPages: 0,
