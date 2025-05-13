@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 
@@ -33,6 +33,8 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
   const [activeTab, setActiveTab] = useState(defaultTab);
   const role = location.state?.role || CRole.User;
 
+  const containerRef = useRef<HTMLDivElement>(null);
+
   const [loadedTabs, setLoadedTabs] = useState<Record<string, boolean>>({
     empro: false,
     c360: false,
@@ -55,6 +57,10 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
   const handleActiveTab = () => {
     return activeTab ?? roleDefaultTabs[role as CRole] ?? "empro";
   };
+
+  const scrollTop = () => {
+    containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+  }
 
   useEffect(() => {
     if (!activeTab) {
@@ -122,9 +128,9 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
       </Navbar>
 
       {/* แสดงเนื้อหาแท็บตาม activeTab */}
-      <div className="tab-content-wrp">
+      <div className="tab-content-wrp" ref={containerRef}>
         {activeTab === "empro" && <EmproTab />}
-        {activeTab === "c360" && <C360Tab shouldFetch={!loadedTabs.c360} />}
+        {activeTab === "c360" && <C360Tab shouldFetch={!loadedTabs.c360} onScrollTop={scrollTop} />}
         {activeTab === "apiLog" && <APILogTab />}
         {activeTab === "account" && <AccountView />}
         {activeTab === "authorizationKey" && <AuthKeyView />}

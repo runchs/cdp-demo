@@ -27,6 +27,7 @@ import axios from '@axios';
 
 interface IC360TabsProps {
     shouldFetch: boolean;
+    onScrollTop: () => void;
 }
 
 interface IErrorState {
@@ -36,7 +37,7 @@ interface IErrorState {
     Other: boolean;
 }
 
-const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch }) => {
+const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
     const location = useLocation();
 
     const [showModal, setShowModal] = useState(false);
@@ -51,8 +52,6 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch }) => {
     const dispatch = useAppDispatch();
     const convertInfo = useAppSelector(state => state.convertInfo);
     // const customerInfo = useAppSelector(state => state.customerInfo);
-
-    const containerRef = useRef<HTMLDivElement>(null);
 
     const [error, setError] = useState<IErrorState>({
         DB: false,
@@ -239,8 +238,6 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch }) => {
         const isAllError = (errors: boolean[]): boolean => errors.every(error => error);
 
         function checkCustomerError(errorState: IErrorState): boolean {
-            console.log(errorState)
-
             const { DB, CDP, SystemI, Other } = errorState;
 
             const isCDPError = isAllError(CDP);
@@ -652,9 +649,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch }) => {
                     setErrorMsg(err.message)
                 }
 
-                setShowModal(false);
-                containerRef.current?.scrollTo({ top: 0, behavior: 'smooth' });
+                setShowModal(false); 
                 
+                setTimeout(() => {
+                    onScrollTop();
+                  }, 300);
             })
             .finally(() => {
 
@@ -720,7 +719,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch }) => {
     };
 
     return !isLoading ? (
-        <div className="bg-whit c360-wrp" ref={containerRef}>
+        <div className="bg-whit c360-wrp" >
             {/* error msg */}
             {errorMsg && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
