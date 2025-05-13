@@ -3,8 +3,8 @@ import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface IErrorState {
   DB: boolean;         // true = error
-  CDP: boolean[];      // ต้องครบ 3 เส้นถึงจะเป็น error (CustSegment, Suggestion, CustProfile)
-  SystemI: boolean[];  // ต้องครบ 2 เส้นถึงจะเป็น error (CustInfo, CustProfile)
+  CDP: boolean[];      // ต้อง true ครบ 3 เส้นถึงจะเป็น error (CustSegment, Suggestion, CustProfile)
+  SystemI: boolean[];  // ต้อง true ครบ 2 เส้นถึงจะเป็น error (CustInfo, CustProfile)
   Other: boolean;
 }
 
