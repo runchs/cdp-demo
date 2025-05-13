@@ -19,7 +19,8 @@ import { useLoader } from '@/contexts/LoaderContext';
 // redux
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setConvertInfo } from '@/store/slices/convertInfoSlice';
-import { setCustomerInfo, COfferResult, IPromotion, ICustomerInfo } from '@/store/slices/customerInfoSlice';
+import { setCustomerInfo, COfferResult, IPromotion } from '@/store/slices/customerInfoSlice';
+import { setErrorMsg, clearErrorMsg, setShowInfo, IErrorState, setErrorState } from '@/store/slices/errorInfoSlice';
 
 // api
 import axios from '@axios';
@@ -30,82 +31,35 @@ interface IC360TabsProps {
     onScrollTop: () => void;
 }
 
-interface IErrorState {
-    DB: boolean;         // true = error
-    CDP: boolean[];      // ต้องครบ 3 เส้นถึงจะเป็น error (CustSegment, Suggestion, CustProfile)
-    SystemI: boolean[];  // ต้องครบ 2 เส้นถึงจะเป็น error (CustInfo, CustProfile)
-    Other: boolean;
-}
+// interface IErrorState {
+//     DB: boolean;         // true = error
+//     CDP: boolean[];      // ต้องครบ 3 เส้นถึงจะเป็น error (CustSegment, Suggestion, CustProfile)
+//     SystemI: boolean[];  // ต้องครบ 2 เส้นถึงจะเป็น error (CustInfo, CustProfile)
+//     Other: boolean;
+// }
 
-const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
+const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     const location = useLocation();
 
     const [showModal, setShowModal] = useState(false);
     const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
-
-    const [errorMsg, setErrorMsg] = useState<string>('');
-    const [showInfo, setShowInfo] = useState<boolean>(true);
 
     const { convertAeonId } = useConvertId();
     const { isLoading, setIsLoading } = useLoader();
 
     const dispatch = useAppDispatch();
     const convertInfo = useAppSelector(state => state.convertInfo);
-    // const customerInfo = useAppSelector(state => state.customerInfo);
+    const customerInfo = useAppSelector(state => state.customerInfo);
+    const errorMsg = useAppSelector(state => state.errorInfo.errorMsg);
+    const showInfo = useAppSelector(state => state.errorInfo.showInfo);
+    const errorState = useAppSelector(state => state.errorInfo.errorState);
 
-    const [error, setError] = useState<IErrorState>({
-        DB: false,
-        CDP: [false, false, false],
-        SystemI: [false, false],
-        Other: false,
-    });
-
-    const [customerInfo, setCustomerInfo] = useState<ICustomerInfo>({
-        updateDate: '',
-        // card 1
-        nameTH: '',
-        nameEN: '',
-        nationalID: '',
-        sweetheart: '',
-        complaintLevel: '',
-        // card 2
-        customerGroup: '',
-        complaintGroup: '',
-        customerType: '',
-        memberStatus: '',
-        customerSegment: '',
-        // card 3
-        mobileNo: '',
-        mobileNoDesc: '',
-        mailTo: '',
-        address: '',
-        gender: '',
-        MaritalStatus: '',
-        typeOfJob: '',
-        // card 4
-        statementChannel: '',
-        lastStatementSentDate: '',
-        statementSentStatus: '',
-        // card 5
-        lastIncreaseLimit: '',
-        lastReduceLimit: '',
-        lastIncome: '',
-        lastCardApply: '',
-        // card 6
-        consentForCollect: '',
-        consentForDisclose: '',
-        blockedMedia: '',
-        // card 7
-        suggestAction: '',
-        // card 8
-        paymentStatus: '',
-        dayPastDue: '',
-        lastOverDueDate: '',
-        // card 9
-        suggestCards: [],
-        // card 10
-        suggestPromotions: []
-    });
+    // const [error, setError] = useState<IErrorState>({
+    //     DB: false,
+    //     CDP: [false, false, false],
+    //     SystemI: [false, false],
+    //     Other: false,
+    // });
 
     const offerResultOptions = [
         { label: "Acknowledged", value: "Acknowledged" },
@@ -125,11 +79,10 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
                             dispatch(setConvertInfo(info));
                         })
                         .catch((msg: any) => {
-                            setError((prev) => ({
-                                ...prev,
+                            dispatch(setErrorState({
                                 DB: true,
                             }));
-                            setErrorMsg(msg);
+                            dispatch(setErrorMsg(msg));
                         });
                 }
             } else if (location.pathname === '/information') {
@@ -149,32 +102,30 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
     }, [location, shouldFetch]);
 
     useEffect(() => {
-        if (convertInfo.aeonId && convertInfo.customerId && convertInfo.traceId) {
+        if (shouldFetch && convertInfo.aeonId && convertInfo.customerId && convertInfo.traceId) {
             const fetchAllCustomerData = async () => {
                 setIsLoading(true);
-                setErrorMsg('');
+                dispatch(clearErrorMsg());
                 let firstErrorMsg = '';
 
                 const handleApiError = (category: keyof IErrorState, msg: string) => {
-                    setError(prev => {
-                        const updatedError = { ...prev } as IErrorState;
+                    const updatedError: IErrorState = { ...errorState };
 
-                        if (Array.isArray(prev[category])) {
-                            const arr = [...(prev[category] as boolean[])];
-                            const firstFalseIndex = arr.findIndex(v => v === false);
+                    if (Array.isArray(updatedError[category])) {
+                        const arr = [...(updatedError[category] as boolean[])];
+                        const firstFalseIndex = arr.findIndex(v => v === false);
 
-                            if (firstFalseIndex !== -1) {
-                                arr[firstFalseIndex] = true;
-                                (updatedError[category] as boolean[]) = arr;
-                            } else {
-                                console.warn(`All slots in ${category} already have errors.`);
-                            }
+                        if (firstFalseIndex !== -1) {
+                            arr[firstFalseIndex] = true;
+                            (updatedError[category] as boolean[]) = arr;
                         } else {
-                            (updatedError[category] as boolean) = true;
+                            console.warn(`All slots in ${category} already have errors.`);
                         }
+                    } else {
+                        (updatedError[category] as boolean) = true;
+                    }
 
-                        return updatedError;
-                    });
+                    dispatch(setErrorState(updatedError));
 
                     if (!firstErrorMsg) {
                         firstErrorMsg = msg;
@@ -204,12 +155,12 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
                             if (err.code !== 'NOT_FOUND' && err.code !== 'NO_RESPONSE') {
                                 handleApiError('Other', err.message);
                             } else {
-                                if(err.details.connector_api) {
+                                if (err.details.connector_api) {
                                     handleApiError('SystemI', err.details.connector_api);
                                 }
                                 if (err.details.td) {
                                     handleApiError('CDP', err.details.td);
-                                }                                
+                                }
                             }
                         }),
                         getSuggestion().catch((err: any) => {
@@ -221,10 +172,10 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
                             }
                         }),
                     ]);
-                    setErrorMsg(firstErrorMsg);
+                    dispatch(setErrorMsg(firstErrorMsg));
                 } catch (err) {
                     console.error('Error in fetch:', err);
-                    setErrorMsg("An error occurred during data fetching.");
+                    dispatch(setErrorMsg("An error occurred during data fetching."));
                 } finally {
                     setIsLoading(false);
                 }
@@ -232,7 +183,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
 
             fetchAllCustomerData();
         }
-    }, [convertInfo]);
+    }, [convertInfo, shouldFetch]);
 
     useEffect(() => {
         const isAllError = (errors: boolean[]): boolean => errors.every(error => error);
@@ -243,12 +194,12 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
             const isCDPError = isAllError(CDP);
             const isSystemIError = isAllError(SystemI);
 
-            if(isCDPError && isSystemIError) {
-                if(errorMsg.includes('Not found data')) {
-                    setErrorMsg('Not found data from CDP and System-i');
+            if (isCDPError && isSystemIError) {
+                if (errorMsg.includes('Not found data')) {
+                    dispatch(setErrorMsg('Not found data from CDP and System-i'));
                 } else if (errorMsg.includes('Connection issue')) {
-                    setErrorMsg('Connection issue from CDP and System-i');
-                }                
+                    dispatch(setErrorMsg('Connection issue from CDP and System-i'));
+                }
             }
 
             if (DB || Other || isCDPError) {
@@ -262,33 +213,33 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
             return true;
         }
 
-        const result = checkCustomerError(error);
-        setShowInfo(result);
-    }, [error]);
+        const result = checkCustomerError(errorState);
+        dispatch(setShowInfo(result));
+
+    }, [errorState]);
 
 
     const getCustomerInfo = () => {
         return new Promise((resolve, reject) => {
-            // axios.get('/dashboard/custinfo', {
-            //     headers: {
-            //         'Trace-ID': convertInfo.traceId
-            //     }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
-            // })
-            //     .then((response: any) => {
-            //         const resp = response.data;
+            axios.get('/dashboard/custinfo', {
+                headers: {
+                    'Trace-ID': convertInfo.traceId
+                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            })
+                .then((response: any) => {
+                    const resp = response.data;
 
                     // mock data for test
-                    const resp = {
-                        "national_id": "1100800391079",
-                        "customer_name_eng": "MEENA TESTCDP",
-                        "customer_name_th": "มีนา TESTCDP",
-                        "mobile_no": "0982757360",
-                        "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
-                        "mail_to": "Home"
-                    }
+                    // const resp = {
+                    //     "national_id": "1100800391079",
+                    //     "customer_name_eng": "MEENA TESTCDP",
+                    //     "customer_name_th": "มีนา TESTCDP",
+                    //     "mobile_no": "0982757360",
+                    //     "mail_to_address": "123/364 ม.พฤกษาวิลล์ 78 ซ.13/1 ต.บางเมือง อ.เมือง จ.สมุทรปราการ 10270",
+                    //     "mail_to": "Home"
+                    // }
 
-                    setCustomerInfo(prev => ({
-                        ...prev,
+                    dispatch(setCustomerInfo({
                         nationalID: resp.national_id,
                         nameTH: resp.customer_name_th,
                         nameEN: resp.customer_name_eng,
@@ -298,200 +249,197 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
                     }));
 
                     resolve(resp);
-                // })
-                // .catch((error: any) => {
-                //     const err = error.response.data.error;
-                //     reject(err);
-                // })
+                })
+                .catch((error: any) => {
+                    const err = error.response.data.error;
+                    reject(err);
+                })
         });
     }
 
     const getCustomerSegment = () => {
         return new Promise((resolve, reject) => {
-            // axios.get('/dashboard/custsegment', {
-            //     headers: {
-            //         'Trace-ID': convertInfo.traceId
-            //     }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
-            // })
-            //     .then((response: any) => {
-            //         const resp = response.data;
+            axios.get('/dashboard/custsegment', {
+                headers: {
+                    'Trace-ID': convertInfo.traceId
+                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            })
+                .then((response: any) => {
+                    const resp = response.data;
 
-            // mock data for test
-            const resp = {
-                "sweetheart": "Sweetheart",
-                "complaint_level": "Complaint Level: 1",
-                "customer_group": "NORMAL - VIP Customer",
-                "complaint_group": "",
-                "customer_type": "VP",
-                "member_status": "NORMAL",
-                "customer_segment": "Existing Customer - Active",
-                "update_data": "01 Jan 0001"
-            }
+                    // mock data for test
+                    // const resp = {
+                    //     "sweetheart": "Sweetheart",
+                    //     "complaint_level": "Complaint Level: 1",
+                    //     "customer_group": "NORMAL - VIP Customer",
+                    //     "complaint_group": "",
+                    //     "customer_type": "VP",
+                    //     "member_status": "NORMAL",
+                    //     "customer_segment": "Existing Customer - Active",
+                    //     "update_data": "01 Jan 0001"
+                    // }
 
-            setCustomerInfo(prev => ({
-                ...prev,
-                sweetheart: resp.sweetheart,
-                complaintLevel: resp.complaint_level,
-                customerGroup: resp.customer_group,
-                complaintGroup: resp.complaint_group,
-                customerType: resp.customer_type,
-                memberStatus: resp.member_status,
-                customerSegment: resp.customer_segment,
-                updateDate: resp.update_data,
-            }));
+                    dispatch(setCustomerInfo({
+                        sweetheart: resp.sweetheart,
+                        complaintLevel: resp.complaint_level,
+                        customerGroup: resp.customer_group,
+                        complaintGroup: resp.complaint_group,
+                        customerType: resp.customer_type,
+                        memberStatus: resp.member_status,
+                        customerSegment: resp.customer_segment,
+                        updateDate: resp.update_data,
+                    }));
 
-            resolve(resp);
-            // })
-            // .catch((error: any) => {
-            //     const err = error.response.data.error;
-            //     reject(err);
-            // })
+                    resolve(resp);
+                })
+                .catch((error: any) => {
+                    const err = error.response.data.error;
+                    reject(err);
+                })
         });
     }
 
     const getCustomerProfile = () => {
         return new Promise((resolve, reject) => {
-            // axios.get('/dashboard/custprofile', {
-            //     headers: {
-            //         'Trace-ID': convertInfo.traceId
-            //     }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
-            // })
-            //     .then((response: any) => {
-            //         const resp = response.data;
+            axios.get('/dashboard/custprofile', {
+                headers: {
+                    'Trace-ID': convertInfo.traceId
+                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            })
+                .then((response: any) => {
+                    const resp = response.data;
 
-            // mock data for test
-            const resp = {
-                "error_system": null,
-                "last_card_apply_date": "25 Aug 2023",
-                "customer_sentiment": "",
-                "phone_no_last_update_date": "01 Aug 2024",
-                "last_increase_credit_limit_update": "29 Aug 2023",
-                "last_reduce_credit_limit_update": "01 Jan 0001",
-                "last_income_update": "29 Aug 2023",
-                "suggested_action": "",
-                "type_of_job": "",
-                "marital_status": "",
-                "gender": "",
-                "last_e_statement_sent_date": "01 Jan 0001",
-                "e_statement_sent_status": "",
-                "statement_channel": "",
-                "consent_for_disclose": "",
-                "block_media": "No blocked",
-                "consent_for_collect_use": "Incomplete",
-                "payment_status": "On time",
-                "day_past_due": "",
-                "last_overdue_date": "-"
-            }
+                    // mock data for test
+                    // const resp = {
+                    //     "error_system": null,
+                    //     "last_card_apply_date": "25 Aug 2023",
+                    //     "customer_sentiment": "",
+                    //     "phone_no_last_update_date": "01 Aug 2024",
+                    //     "last_increase_credit_limit_update": "29 Aug 2023",
+                    //     "last_reduce_credit_limit_update": "01 Jan 0001",
+                    //     "last_income_update": "29 Aug 2023",
+                    //     "suggested_action": "",
+                    //     "type_of_job": "",
+                    //     "marital_status": "",
+                    //     "gender": "",
+                    //     "last_e_statement_sent_date": "01 Jan 0001",
+                    //     "e_statement_sent_status": "",
+                    //     "statement_channel": "",
+                    //     "consent_for_disclose": "",
+                    //     "block_media": "No blocked",
+                    //     "consent_for_collect_use": "Incomplete",
+                    //     "payment_status": "On time",
+                    //     "day_past_due": "",
+                    //     "last_overdue_date": "-"
+                    // }
 
-            setCustomerInfo(prev => ({
-                ...prev,
-                lastCardApply: resp.last_card_apply_date,
-                mobileNoDesc: resp.phone_no_last_update_date,
-                lastIncreaseLimit: resp.last_increase_credit_limit_update,
-                lastReduceLimit: resp.last_reduce_credit_limit_update,
-                lastIncome: resp.last_income_update,
-                suggestAction: resp.suggested_action || 'no suggest action',
-                typeOfJob: resp.type_of_job,
-                MaritalStatus: resp.marital_status,
-                gender: resp.gender,
-                lastStatementSentDate: resp.last_e_statement_sent_date,
-                statementSentStatus: resp.e_statement_sent_status,
-                statementChannel: resp.statement_channel,
-                consentForDisclose: resp.consent_for_disclose,
-                blockedMedia: resp.block_media,
-                consentForCollect: resp.consent_for_collect_use,
-                paymentStatus: resp.payment_status,
-                dayPastDue: resp.day_past_due || "0",
-                lastOverDueDate: resp.last_overdue_date,
-            }));
+                    dispatch(setCustomerInfo({
+                        lastCardApply: resp.last_card_apply_date,
+                        mobileNoDesc: resp.phone_no_last_update_date,
+                        lastIncreaseLimit: resp.last_increase_credit_limit_update,
+                        lastReduceLimit: resp.last_reduce_credit_limit_update,
+                        lastIncome: resp.last_income_update,
+                        suggestAction: resp.suggested_action || 'no suggest action',
+                        typeOfJob: resp.type_of_job,
+                        MaritalStatus: resp.marital_status,
+                        gender: resp.gender,
+                        lastStatementSentDate: resp.last_e_statement_sent_date,
+                        statementSentStatus: resp.e_statement_sent_status,
+                        statementChannel: resp.statement_channel,
+                        consentForDisclose: resp.consent_for_disclose,
+                        blockedMedia: resp.block_media,
+                        consentForCollect: resp.consent_for_collect_use,
+                        paymentStatus: resp.payment_status,
+                        dayPastDue: resp.day_past_due || "0",
+                        lastOverDueDate: resp.last_overdue_date,
+                    }));
 
-            resolve(resp);
-            // })
-            // .catch((error: any) => {
-            //     const err = error.response.data.error;
-            //     reject(err);
-            // })
+                    resolve(resp);
+                })
+                .catch((error: any) => {
+                    const err = error.response.data.error;
+                    reject(err);
+                })
         });
     }
 
     const getSuggestion = () => {
         return new Promise((resolve, reject) => {
-            // axios.get('/dashboard/suggestion', {
-            //     headers: {
-            //         'Trace-ID': convertInfo.traceId
-            //     }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
-            // })
-            //     .then((response: any) => {
-            //         const resp = response.data;
+            axios.get('/dashboard/suggestion', {
+                headers: {
+                    'Trace-ID': convertInfo.traceId
+                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+            })
+                .then((response: any) => {
+                    const resp = response.data;
 
-            // mock data for test
-            const resp = {
-                "suggest_cards": [
-                    "Club Thailand JCB Card​",
-                    "Club Thailand Mastercard​",
-                    "Club Thailand Visa Card"
-                ],
-                "suggest_promotions": [
-                    {
-                        "promotion_code": "P24099EEBE",
-                        "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
-                        "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
-                        "action": "test",
-                        "promotion_result_timestamp": "25 Mar 2025, 14.24",
-                        "period": "4 Sep 2024 - 31 Aug 2025",
-                        "eligible_card": [
-                            "BIG C WORLD MASTERCARD"
-                        ]
-                    },
-                    {
-                        "promotion_code": "P240362142",
-                        "promotion_name": "buy insurance web aeon",
-                        "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
-                        "action": "Acknowledged",
-                        "promotion_result_timestamp": "25 Feb 2025, 13.19",
-                        "period": "21 Mar 2024 - 31 Dec 2025",
-                        "eligible_card": [
-                            "JCB CARD"
-                        ]
-                    },
-                    {
-                        "promotion_code": "P2409CB775",
-                        "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
-                        "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
-                        "action": "Acknowledged",
-                        "promotion_result_timestamp": "17 Feb 2025, 16.01",
-                        "period": "25 Sep 2024 - 30 Sep 2025",
-                        "eligible_card": [
-                            "AEON ROP WORLD MASTER CARD",
-                            "VISA CARD"
-                        ]
-                    }
-                ]
-            }
+                    // mock data for test
+                    // const resp = {
+                    //     "suggest_cards": [
+                    //         "Club Thailand JCB Card​",
+                    //         "Club Thailand Mastercard​",
+                    //         "Club Thailand Visa Card"
+                    //     ],
+                    //     "suggest_promotions": [
+                    //         {
+                    //             "promotion_code": "P24099EEBE",
+                    //             "promotion_name": "BIC CAMERA Coupon with Aeon Credit Card",
+                    //             "promotion_details": "ซื้อสินค้าปลอดภาษี สูงสุด 10%  และ รับส่วนลด สูงสุด 7% เมื่อซื้อสินค้าที่ร้าน BicCamera ประเทศญี่ปุ่น, ร้าน Air BicCamera และ ร้าน KOJIMA ด้วยบัตรเครดิตอิออนทุกประเภท (ยกเว้นบัตรเครดิตเพื่อองค์กร) ซึ่ง BicCamera เป็นห้างสรรพสินค้าในประเทศญี่ปุ่น จำหน่ายสินค้าหลากหลายประเภท เช่น เครื่องใช้ไฟฟ้า ยา เครื่องสำอาง และของใช้ในชีวิตประจำวัน โปรดแสดงภาพบาร์โค้ดบนสื่อประชาสัมพันธ์นี้ ที่แคชเชียร์",
+                    //             "action": "test",
+                    //             "promotion_result_timestamp": "25 Mar 2025, 14.24",
+                    //             "period": "4 Sep 2024 - 31 Aug 2025",
+                    //             "eligible_card": [
+                    //                 "BIG C WORLD MASTERCARD"
+                    //             ]
+                    //         },
+                    //         {
+                    //             "promotion_code": "P240362142",
+                    //             "promotion_name": "buy insurance web aeon",
+                    //             "promotion_details": "ลูกค้าสามารถซื้อประกันออนไลน์ผ่านทาง AEON THAI MOBILE Application ตั้งแต่วันที่  25 มีนาคม 2567 เป็นต้นไป",
+                    //             "action": "Acknowledged",
+                    //             "promotion_result_timestamp": "25 Feb 2025, 13.19",
+                    //             "period": "21 Mar 2024 - 31 Dec 2025",
+                    //             "eligible_card": [
+                    //                 "JCB CARD"
+                    //             ]
+                    //         },
+                    //         {
+                    //             "promotion_code": "P2409CB775",
+                    //             "promotion_name": "AEON THEATRE AND AEON LOUNGE at QUARTIER CINEART21",
+                    //             "promotion_details": "สิทธิพิเศษสำหรับผู้ถือบัตรเครดิตอิออน รอยัล ออร์คิด พลัส, บัตรเครดิตอิออน โกลด์, บัตรเครดิต วีซ่า โอลิมปิก อิออน, บัตรเครดิตอิออนคลาสสิค, บัตรเครดิตอิออน เจ-พรีเมียร์ แพลทินัม และบัตรเครดิตอิออนคลับไทยแลนด์ ที่ออกโดยบริษัท อิออน ธนสินทรัพย์ (ไทยแลนด์) จำกัด (มหาชน) (“บริษัทฯ”) ที่ใช้บริการโรงภาพยนตร์อิออน เธียเตอร์ แอท ควอเทียร์ (AEON Theatre @Quartier) ควอเทียร์ ซีเนอาร์ต ศูนย์การค้าเอ็มควอเทียร์ ชั้น 4 และชำระค่าบริการผ่านบัตรเครดิตอิออน ตามเงื่อนไขที่กำหนดของบัตรแต่ละประเภท",
+                    //             "action": "Acknowledged",
+                    //             "promotion_result_timestamp": "17 Feb 2025, 16.01",
+                    //             "period": "25 Sep 2024 - 30 Sep 2025",
+                    //             "eligible_card": [
+                    //                 "AEON ROP WORLD MASTER CARD",
+                    //                 "VISA CARD"
+                    //             ]
+                    //         }
+                    //     ]
+                    // }
 
-            setCustomerInfo(prev => ({
-                ...prev,
-                suggestCards: resp.suggest_cards,
-                suggestPromotions: resp.suggest_promotions.length > 0 ?
-                    resp.suggest_promotions.map((item: any) => ({
-                        code: item.promotion_code,
-                        name: item.promotion_name,
-                        detail: item.promotion_details,
-                        action: item.action,
-                        resultTimestamp: item.promotion_result_timestamp,
-                        period: item.period,
-                        eligibleCard: item.eligible_card,
-                        offerResult: null,
-                    }))
-                    : []
-            }));
+                    dispatch(setCustomerInfo({
+                        suggestCards: resp.suggest_cards,
+                        suggestPromotions: resp.suggest_promotions.length > 0 ?
+                            resp.suggest_promotions.map((item: any) => ({
+                                code: item.promotion_code,
+                                name: item.promotion_name,
+                                detail: item.promotion_details,
+                                action: item.action,
+                                resultTimestamp: item.promotion_result_timestamp,
+                                period: item.period,
+                                eligibleCard: item.eligible_card,
+                                offerResult: null,
+                            }))
+                            : []
+                    }));
 
-            resolve(resp);
-            // })
-            // .catch((error: any) => {
-            //     const err = error.response.data.error;
-            //     reject(err);
-            // })
+                    resolve(resp);
+                })
+                .catch((error: any) => {
+                    const err = error.response.data.error;
+                    reject(err);
+                })
         });
     }
 
@@ -628,12 +576,12 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
             {
                 aeon_id: convertInfo.aeonId,
                 promotion_code: selectedPromotion?.code,
-                promotion_result: selectedPromotion?.offerResult,                
+                promotion_result: selectedPromotion?.offerResult,
             },
             {
                 headers: {
                     'Trace-ID': convertInfo.traceId
-                },  params: {case: 500}
+                }, params: { case: 500 }
             }
         )
             .then((response: any) => {
@@ -643,17 +591,17 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
                 console.error("offeresult error:", error);
 
                 const err = error.response.data.error;
-                if(err.code === 'NOT_FOUND' || err.code === 'NO_RESPONSE') {
-                    setErrorMsg(err.details.td)
+                if (err.code === 'NOT_FOUND' || err.code === 'NO_RESPONSE') {
+                    dispatch(setErrorMsg(err.details.td));
                 } else {
-                    setErrorMsg(err.message)
+                    dispatch(setErrorMsg(err.message));
                 }
 
-                setShowModal(false); 
-                
+                setShowModal(false);
+
                 setTimeout(() => {
                     onScrollTop();
-                  }, 300);
+                }, 300);
             })
             .finally(() => {
 
@@ -723,7 +671,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop  }) => {
             {/* error msg */}
             {errorMsg && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
-                    <div>{errorMsg} {!error.DB && `(Trace ID: ${convertInfo.traceId})`}</div>
+                    <div>{errorMsg} {!errorState.DB && `(Trace ID: ${convertInfo.traceId})`}</div>
                 </Alert>
             )}
 

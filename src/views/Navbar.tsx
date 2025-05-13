@@ -70,7 +70,10 @@ const InformationView: React.FC<InformationViewProps> = ({ defaultTab }) => {
 
   useEffect(() => {
     if (activeTab && !loadedTabs[activeTab] && activeTab !== "logOut") {
-      setLoadedTabs(prev => ({ ...prev, [activeTab]: true }));
+      setTimeout(() => {
+        setLoadedTabs(prev => ({ ...prev, [activeTab]: true }));
+      }, 3000);
+      
     }
   }, [activeTab]);
 
