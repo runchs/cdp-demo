@@ -44,6 +44,9 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     const [showModal, setShowModal] = useState(false);
     const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
 
+    const isDeeplink = useRef<boolean>(false);
+    const user = useRef<string>('');
+
     const { convertAeonId } = useConvertId();
     const { isLoading, setIsLoading } = useLoader();
 
@@ -53,13 +56,6 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     const errorMsg = useAppSelector(state => state.errorInfo.errorMsg);
     const showInfo = useAppSelector(state => state.errorInfo.showInfo);
     const errorState = useAppSelector(state => state.errorInfo.errorState);
-
-    // const [error, setError] = useState<IErrorState>({
-    //     DB: false,
-    //     CDP: [false, false, false],
-    //     SystemI: [false, false],
-    //     Other: false,
-    // });
 
     const offerResultOptions = [
         { label: "Acknowledged", value: "Acknowledged" },
@@ -72,9 +68,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             const searchParams = new URLSearchParams(location.search);
 
             if (location.pathname === '/c360') {
+                isDeeplink.current = true;
+
                 const aeonid = searchParams.get('aeonid');
                 if (aeonid) {
-                    convertAeonId(aeonid)
+                    convertAeonId(aeonid, true)
                         .then((info: any) => {
                             dispatch(setConvertInfo(info));
                         })
@@ -224,7 +222,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             axios.get('/dashboard/custinfo', {
                 headers: {
                     'Trace-ID': convertInfo.traceId
-                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+                }, params: { 
+                    aeon_id: convertInfo.aeonId, 
+                    cust_id: convertInfo.customerId,
+                    user: isDeeplink.current ? 'deeplink' : user.current,
+                 }
             })
                 .then((response: any) => {
                     const resp = response.data;
@@ -252,7 +254,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             axios.get('/dashboard/custsegment', {
                 headers: {
                     'Trace-ID': convertInfo.traceId
-                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+                }, params: { 
+                    aeon_id: convertInfo.aeonId, 
+                    cust_id: convertInfo.customerId,
+                    user: isDeeplink.current ? 'deeplink' : user.current,
+                }
             })
                 .then((response: any) => {
                     const resp = response.data;
@@ -282,7 +288,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             axios.get('/dashboard/custprofile', {
                 headers: {
                     'Trace-ID': convertInfo.traceId
-                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+                }, params: { 
+                    aeon_id: convertInfo.aeonId, 
+                    cust_id: convertInfo.customerId,
+                    user: isDeeplink.current ? 'deeplink' : user.current,
+                 }
             })
                 .then((response: any) => {
                     const resp = response.data;
@@ -322,7 +332,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             axios.get('/dashboard/suggestion', {
                 headers: {
                     'Trace-ID': convertInfo.traceId
-                }, params: { aeon_id: convertInfo.aeonId, cust_id: convertInfo.customerId }
+                }, params: { 
+                    aeon_id: convertInfo.aeonId, 
+                    cust_id: convertInfo.customerId,
+                    user: isDeeplink.current ? 'deeplink' : user.current,
+                }
             })
                 .then((response: any) => {
                     const resp = response.data;
@@ -489,7 +503,8 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             },
             {
                 headers: {
-                    'Trace-ID': convertInfo.traceId
+                    'Trace-ID': convertInfo.traceId,
+                    'User': isDeeplink.current ? 'deeplink' : user.current,
                 }
             }
         )

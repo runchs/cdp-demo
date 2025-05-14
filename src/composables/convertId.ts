@@ -7,9 +7,9 @@ import { IConvertInfo } from '@/store/slices/convertInfoSlice'
 export const useConvertId = () => {
     const { setIsLoading } = useLoader();
 
-    const convertAeonId = useCallback((id: string, user?: string): Promise<IConvertInfo> => {
+    const convertAeonId = useCallback((id: string, isDeeplink: boolean = false, user?: string): Promise<IConvertInfo> => {
         setIsLoading(true);
-        return axios.get('/convert/aeonid', { params: { aeon_id: id, user: user} })
+        return axios.get('/convert/aeonid', { params: { aeon_id: id, user: isDeeplink ? 'deeplink' : user} })
             .then((response: any) => {
                 const resp = response.data;
                 return {
