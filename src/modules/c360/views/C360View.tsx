@@ -511,7 +511,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             .then((response: any) => {
                 setShowModal(false);
             })
-            .catch((error: any) => {
+            .catch((error: any) => { 
                 console.error("offeresult error:", error);
 
                 const err = error.response.data.error;

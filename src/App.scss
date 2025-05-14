@@ -6,9 +6,22 @@
 
 @use './assets/styles/variables.scss' as v;
 
-@import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
+// @import url('https://fonts.googleapis.com/css2?family=Sarabun:wght@400;700&display=swap');
 
-.App {
+@font-face {
+	font-family: 'Sarabun';
+	src: url('/fonts/Sarabun-Regular.woff2') format('woff2');
+	font-weight: 400;
+}
+
+@font-face {
+	font-family: 'Sarabun';
+	src: url('/fonts/Sarabun-Bold.woff2') format('woff2');
+	font-weight: 700;
+	font-style: normal;
+}
+
+.App { 
 	text-align: center;
 	font-family: 'Sarabun', sans-serif;
 	height: 100vh;
