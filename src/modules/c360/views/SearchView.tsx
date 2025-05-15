@@ -4,7 +4,8 @@ import { Row, Col } from "react-bootstrap";
 import Button from 'react-bootstrap/Button';
 import Form from 'react-bootstrap/Form';
 import Alert from 'react-bootstrap/Alert';
-import { useConvertId, IconvertInfo } from '@/composables/convertId'
+import { useConvertId } from '@/composables/convertId'
+import { IConvertInfo } from '@/store/slices/accessInfoSlice'
 
 enum COption {
   AeonId = '1',
@@ -22,11 +23,9 @@ const SearchView: React.FC = () => {
   const [showAlert, setShowAlert] = useState<boolean>(false);
   const [alertMsg, setAlertMsg] = useState<string>("");
 
-  const [convertInfo, setconvertInfo] = useState<IconvertInfo>({
+  const [convertInfo, setconvertInfo] = useState<IConvertInfo>({
     aeonId: '',
     customerId: '',
-    traceId: '',
-    user: ''
   });
 
   const [error, setError] = useState<boolean>(false); // mock for test
@@ -77,7 +76,7 @@ const SearchView: React.FC = () => {
 
   useEffect(() => {
     if (convertInfo.aeonId && convertInfo.customerId) {
-      navigate(`/information?aeonid=${convertInfo.aeonId}&customerid=${convertInfo.customerId}&traceId=${convertInfo.traceId}`);
+      navigate(`/information?aeonid=${convertInfo.aeonId}&customerid=${convertInfo.customerId}`);
     }
   }, [convertInfo]);
 

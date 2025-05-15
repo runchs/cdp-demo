@@ -2,7 +2,7 @@
 import axios from '@axios';
 import { useLoader } from '@/contexts/LoaderContext';
 import { useCallback } from 'react';
-import { IConvertInfo } from '@/store/slices/convertInfoSlice'
+import { IConvertInfo } from '@/store/slices/accessInfoSlice'
 
 export const useConvertId = () => {
     const { setIsLoading } = useLoader();
@@ -14,9 +14,7 @@ export const useConvertId = () => {
                 const resp = response.data;
                 return {
                     aeonId: resp.aeon_id,
-                    customerId: resp.cust_id,
-                    traceId: resp.trace_id,
-                    user
+                    customerId: resp.cust_id
                 };
             })
             .catch((error: any) => {
@@ -35,9 +33,7 @@ export const useConvertId = () => {
                 const resp = response.data;
                 return {
                     aeonId: resp.aeon_id,
-                    customerId: resp.cust_id,
-                    traceId: resp.trace_id,
-                    user
+                    customerId: resp.cust_id
                 };
             })
             .catch((error: any) => {

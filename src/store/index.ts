@@ -1,11 +1,11 @@
 import { configureStore } from '@reduxjs/toolkit';
-import convertInfoReducer from './slices/convertInfoSlice';
+import accessInfoReducer from './slices/accessInfoSlice';
 import customerInfoReducer from './slices/customerInfoSlice';
 import errorInfoReducer from './slices/errorInfoSlice';
 
 export const store = configureStore({
   reducer: {
-    convertInfo: convertInfoReducer,
+    accessInfo: accessInfoReducer,
     customerInfo: customerInfoReducer,
     errorInfo: errorInfoReducer,
   },

@@ -18,7 +18,7 @@ import { useLoader } from '@/contexts/LoaderContext';
 
 // redux
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setConvertInfo } from '@/store/slices/convertInfoSlice';
+import { setAccessInfo, setConvertInfo } from '@/store/slices/accessInfoSlice';
 import { setCustomerInfo, COfferResult, IPromotion } from '@/store/slices/customerInfoSlice';
 import { setErrorMsg, clearErrorMsg, setShowInfo, IErrorState, setErrorState } from '@/store/slices/errorInfoSlice';
 
@@ -31,13 +31,6 @@ interface IC360TabsProps {
     onScrollTop: () => void;
 }
 
-// interface IErrorState {
-//     DB: boolean;         // true = error
-//     CDP: boolean[];      // ต้องครบ 3 เส้นถึงจะเป็น error (CustSegment, Suggestion, CustProfile)
-//     SystemI: boolean[];  // ต้องครบ 2 เส้นถึงจะเป็น error (CustInfo, CustProfile)
-//     Other: boolean;
-// }
-
 const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     const location = useLocation();
 
@@ -45,13 +38,14 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
 
     const isDeeplink = useRef<boolean>(false);
-    const user = useRef<string>('');
 
     const { convertAeonId } = useConvertId();
     const { isLoading, setIsLoading } = useLoader();
 
     const dispatch = useAppDispatch();
-    const convertInfo = useAppSelector(state => state.convertInfo);
+
+    const accessInfo = useAppSelector(state => state.accessInfo);
+    const convertInfo = useAppSelector(state => state.accessInfo.convertInfo);
     const customerInfo = useAppSelector(state => state.customerInfo);
     const errorMsg = useAppSelector(state => state.errorInfo.errorMsg);
     const showInfo = useAppSelector(state => state.errorInfo.showInfo);
@@ -65,6 +59,49 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
 
     useEffect(() => {
         if (shouldFetch) {
+            onSetAccessInfo();
+            accessLog();
+        }
+    }, [location, shouldFetch]);
+    
+
+    const onSetAccessInfo = () => {
+        dispatch(setAccessInfo({
+            link: window.location.href,
+            ip: '12345',
+            isDeeplink: location.pathname === '/c360',
+            user: location.pathname === '/c360' ? 'deeplink' : accessInfo.user
+        }));
+    }
+
+    const accessLog = () => {
+        axios.post('/accesslog',
+            {
+                'link': accessInfo.link,
+                'ip': accessInfo.ip,
+                'is-deeplink': accessInfo.isDeeplink,
+                'user': accessInfo.user,
+            },
+            {
+                headers: {
+                    'Trace-ID': accessInfo.traceId,
+                }
+            }
+        )
+            .then((response: any) => {
+                dispatch(setAccessInfo({
+                    traceId: response.data["trace-id"]
+                }));
+            })
+            .catch((error: any) => {
+                console.error("offeresult error:", error);
+            })
+    };
+
+    useEffect(() => {
+        console.log(accessInfo.traceId)
+        if (shouldFetch && accessInfo.traceId) {
+
             const searchParams = new URLSearchParams(location.search);
 
             if (location.pathname === '/c360') {
@@ -92,15 +129,14 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                     dispatch(setConvertInfo({
                         aeonId: aeonid,
                         customerId: customerid,
-                        traceId: traceId,
                     }));
                 }
             }
         }
-    }, [location, shouldFetch]);
+    }, [accessInfo, shouldFetch]);
 
     useEffect(() => {
-        if (shouldFetch && convertInfo.aeonId && convertInfo.customerId && convertInfo.traceId) {
+        if (shouldFetch && convertInfo.aeonId && convertInfo.customerId && accessInfo.traceId) {
             const fetchAllCustomerData = async () => {
                 setIsLoading(true);
                 dispatch(clearErrorMsg());
@@ -221,12 +257,12 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         return new Promise((resolve, reject) => {
             axios.get('/dashboard/custinfo', {
                 headers: {
-                    'Trace-ID': convertInfo.traceId
-                }, params: { 
-                    aeon_id: convertInfo.aeonId, 
+                    'Trace-ID': accessInfo.traceId
+                }, params: {
+                    aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: isDeeplink.current ? 'deeplink' : user.current,
-                 }
+                    user: isDeeplink.current ? 'deeplink' : accessInfo.user,
+                }
             })
                 .then((response: any) => {
                     const resp = response.data;
@@ -253,11 +289,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         return new Promise((resolve, reject) => {
             axios.get('/dashboard/custsegment', {
                 headers: {
-                    'Trace-ID': convertInfo.traceId
-                }, params: { 
-                    aeon_id: convertInfo.aeonId, 
+                    'Trace-ID': accessInfo.traceId
+                }, params: {
+                    aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: isDeeplink.current ? 'deeplink' : user.current,
+                    user: isDeeplink.current ? 'deeplink' : accessInfo.user,
                 }
             })
                 .then((response: any) => {
@@ -287,12 +323,12 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         return new Promise((resolve, reject) => {
             axios.get('/dashboard/custprofile', {
                 headers: {
-                    'Trace-ID': convertInfo.traceId
-                }, params: { 
-                    aeon_id: convertInfo.aeonId, 
+                    'Trace-ID': accessInfo.traceId
+                }, params: {
+                    aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: isDeeplink.current ? 'deeplink' : user.current,
-                 }
+                    user: isDeeplink.current ? 'deeplink' : accessInfo.user,
+                }
             })
                 .then((response: any) => {
                     const resp = response.data;
@@ -331,11 +367,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         return new Promise((resolve, reject) => {
             axios.get('/dashboard/suggestion', {
                 headers: {
-                    'Trace-ID': convertInfo.traceId
-                }, params: { 
-                    aeon_id: convertInfo.aeonId, 
+                    'Trace-ID': accessInfo.traceId
+                }, params: {
+                    aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: isDeeplink.current ? 'deeplink' : user.current,
+                    user: isDeeplink.current ? 'deeplink' : accessInfo.user,
                 }
             })
                 .then((response: any) => {
@@ -503,15 +539,15 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             },
             {
                 headers: {
-                    'Trace-ID': convertInfo.traceId,
-                    'User': isDeeplink.current ? 'deeplink' : user.current,
+                    'Trace-ID': accessInfo.traceId,
+                    'User': isDeeplink.current ? 'deeplink' : accessInfo.user,
                 }
             }
         )
             .then((response: any) => {
                 setShowModal(false);
             })
-            .catch((error: any) => { 
+            .catch((error: any) => {
                 console.error("offeresult error:", error);
 
                 const err = error.response.data.error;
@@ -527,9 +563,6 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                     onScrollTop();
                 }, 300);
             })
-            .finally(() => {
-
-            });
     };
 
     // check condition color
@@ -595,7 +628,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             {/* error msg */}
             {errorMsg && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
-                    <div>{errorMsg} {!errorState.DB && `(Trace ID: ${convertInfo.traceId})`}</div>
+                    <div>{errorMsg} {!errorState.DB && `(Trace ID: ${accessInfo.traceId})`}</div>
                 </Alert>
             )}
 
