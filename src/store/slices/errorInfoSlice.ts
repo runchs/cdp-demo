@@ -2,7 +2,8 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 export interface IErrorState {
-  DB: boolean;         // true = error
+  AccessLog: boolean;  // true = error    
+  DB: boolean;         
   CDP: boolean[];      // ต้อง true ครบ 3 เส้นถึงจะเป็น error (CustSegment, Suggestion, CustProfile)
   SystemI: boolean[];  // ต้อง true ครบ 2 เส้นถึงจะเป็น error (CustInfo, CustProfile)
   Other: boolean;
@@ -15,6 +16,7 @@ interface IErrorInfo {
 }
 
 const initialErrorState: IErrorState = {
+  AccessLog: false,
   DB: false,
   CDP: [false, false, false],
   SystemI: [false, false],

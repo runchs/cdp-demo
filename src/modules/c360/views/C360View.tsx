@@ -100,13 +100,13 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             {
                 'link': accessPayload.link,
                 'ip': accessPayload.ip,
-                'is-deeplink': accessPayload.isDeeplink,
+                'is_deeplink': accessPayload.isDeeplink, 
                 'user': accessPayload.user,
             },
             {
                 headers: {
                     'Trace-ID': traceId,
-                }
+                },
             }
         )
             .then((response: any) => {
@@ -115,6 +115,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             .catch((error: any) => {
                 setIsLoading(false);
                 console.error("accesslog error:", error);
+
+                dispatch(setErrorState({
+                    AccessLog: true,
+                }));
+                dispatch(setErrorMsg(error.response.data.error.message));
             })
             .finally(() => {
             })
@@ -242,7 +247,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         const isAllError = (errors: boolean[]): boolean => errors.every(error => error);
 
         function checkCustomerError(errorState: IErrorState): boolean {
-            const { DB, CDP, SystemI, Other } = errorState;
+            const { AccessLog, DB, CDP, SystemI, Other } = errorState;
 
             const isCDPError = isAllError(CDP);
             const isSystemIError = isAllError(SystemI);
@@ -255,7 +260,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                 }
             }
 
-            if (DB || Other || isCDPError) {
+            if (AccessLog || DB || Other || isCDPError) {
                 return false;
             }
 
@@ -647,7 +652,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             {/* error msg */}
             {errorMsg && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
-                    <div>{errorMsg} {!errorState.DB && `(Trace ID: ${traceId})`}</div>
+                    <div>{errorMsg} {!errorState.AccessLog && `(Trace ID: ${traceId})`}</div>
                 </Alert>
             )}
 
