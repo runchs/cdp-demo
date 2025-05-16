@@ -18,7 +18,7 @@ import { useLoader } from '@/contexts/LoaderContext';
 
 // redux
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
-import { setAccessInfo, setConvertInfo } from '@/store/slices/accessInfoSlice';
+import { setPayloadInfo, setTraceId, setConvertInfo } from '@/store/slices/accessInfoSlice';
 import { setCustomerInfo, COfferResult, IPromotion } from '@/store/slices/customerInfoSlice';
 import { setErrorMsg, clearErrorMsg, setShowInfo, IErrorState, setErrorState } from '@/store/slices/errorInfoSlice';
 
@@ -37,14 +37,13 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     const [showModal, setShowModal] = useState(false);
     const [selectedPromotion, setSelectedPromotion] = useState<IPromotion | null>(null);
 
-    const isDeeplink = useRef<boolean>(false);
-
     const { convertAeonId } = useConvertId();
     const { isLoading, setIsLoading } = useLoader();
 
     const dispatch = useAppDispatch();
 
-    const accessInfo = useAppSelector(state => state.accessInfo);
+    const accessPayload = useAppSelector(state => state.accessInfo.payloadInfo);
+    const traceId = useAppSelector(state => state.accessInfo.traceId);
     const convertInfo = useAppSelector(state => state.accessInfo.convertInfo);
     const customerInfo = useAppSelector(state => state.customerInfo);
     const errorMsg = useAppSelector(state => state.errorInfo.errorMsg);
@@ -60,56 +59,76 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     useEffect(() => {
         if (shouldFetch) {
             onSetAccessInfo();
-            accessLog();
         }
     }, [location, shouldFetch]);
-    
 
-    const onSetAccessInfo = () => {
-        dispatch(setAccessInfo({
+
+    const onSetAccessInfo = async () => {
+        setIsLoading(true);
+        const ip = await getIP();
+
+        dispatch(setPayloadInfo({
             link: window.location.href,
-            ip: '12345',
+            ip: ip,
             isDeeplink: location.pathname === '/c360',
-            user: location.pathname === '/c360' ? 'deeplink' : accessInfo.user
+            user: location.pathname === '/c360' ? 'deeplink' : accessPayload.user
         }));
-    }
+    };
+
+
+    const getIP = async () => {
+        try {
+            const res = await fetch('https://api.ipify.org?format=json');
+            const data = await res.json();
+            return data.ip;
+        } catch {
+            return 'UNKNOWN';
+        }
+    };
+
+
+
+    useEffect(() => {
+        if (shouldFetch && accessPayload.link && accessPayload.ip && accessPayload.isDeeplink && accessPayload.user) {
+            accessLog();
+        }
+    }, [accessPayload, shouldFetch]);
 
     const accessLog = () => {
+        setIsLoading(true);
         axios.post('/accesslog',
             {
-                'link': accessInfo.link,
-                'ip': accessInfo.ip,
-                'is-deeplink': accessInfo.isDeeplink,
-                'user': accessInfo.user,
+                'link': accessPayload.link,
+                'ip': accessPayload.ip,
+                'is-deeplink': accessPayload.isDeeplink,
+                'user': accessPayload.user,
             },
             {
                 headers: {
-                    'Trace-ID': accessInfo.traceId,
+                    'Trace-ID': traceId,
                 }
             }
         )
             .then((response: any) => {
-                dispatch(setAccessInfo({
-                    traceId: response.data["trace-id"]
-                }));
+                dispatch(setTraceId(response.data["trace-id"]));
             })
             .catch((error: any) => {
-                console.error("offeresult error:", error);
+                setIsLoading(false);
+                console.error("accesslog error:", error);
+            })
+            .finally(() => {
             })
     };
 
     useEffect(() => {
-        console.log(accessInfo.traceId)
-        if (shouldFetch && accessInfo.traceId) {
+        if (shouldFetch && traceId) {
 
             const searchParams = new URLSearchParams(location.search);
 
-            if (location.pathname === '/c360') {
-                isDeeplink.current = true;
-
+            if (accessPayload.isDeeplink) {
                 const aeonid = searchParams.get('aeonid');
                 if (aeonid) {
-                    convertAeonId(aeonid, true)
+                    convertAeonId(aeonid, true, traceId)
                         .then((info: any) => {
                             dispatch(setConvertInfo(info));
                         })
@@ -133,10 +152,10 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                 }
             }
         }
-    }, [accessInfo, shouldFetch]);
+    }, [traceId, shouldFetch]);
 
     useEffect(() => {
-        if (shouldFetch && convertInfo.aeonId && convertInfo.customerId && accessInfo.traceId) {
+        if (shouldFetch && convertInfo.aeonId && convertInfo.customerId && traceId) {
             const fetchAllCustomerData = async () => {
                 setIsLoading(true);
                 dispatch(clearErrorMsg());
@@ -257,11 +276,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         return new Promise((resolve, reject) => {
             axios.get('/dashboard/custinfo', {
                 headers: {
-                    'Trace-ID': accessInfo.traceId
+                    'Trace-ID': traceId
                 }, params: {
                     aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: isDeeplink.current ? 'deeplink' : accessInfo.user,
+                    user: accessPayload.isDeeplink ? 'deeplink' : accessPayload.user
                 }
             })
                 .then((response: any) => {
@@ -289,11 +308,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         return new Promise((resolve, reject) => {
             axios.get('/dashboard/custsegment', {
                 headers: {
-                    'Trace-ID': accessInfo.traceId
+                    'Trace-ID': traceId
                 }, params: {
                     aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: isDeeplink.current ? 'deeplink' : accessInfo.user,
+                    user: accessPayload.isDeeplink ? 'deeplink' : accessPayload.user,
                 }
             })
                 .then((response: any) => {
@@ -323,11 +342,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         return new Promise((resolve, reject) => {
             axios.get('/dashboard/custprofile', {
                 headers: {
-                    'Trace-ID': accessInfo.traceId
+                    'Trace-ID': traceId
                 }, params: {
                     aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: isDeeplink.current ? 'deeplink' : accessInfo.user,
+                    user: accessPayload.isDeeplink ? 'deeplink' : accessPayload.user,
                 }
             })
                 .then((response: any) => {
@@ -367,11 +386,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         return new Promise((resolve, reject) => {
             axios.get('/dashboard/suggestion', {
                 headers: {
-                    'Trace-ID': accessInfo.traceId
+                    'Trace-ID': traceId
                 }, params: {
                     aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: isDeeplink.current ? 'deeplink' : accessInfo.user,
+                    user: accessPayload.isDeeplink ? 'deeplink' : accessPayload.user,
                 }
             })
                 .then((response: any) => {
@@ -539,8 +558,8 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             },
             {
                 headers: {
-                    'Trace-ID': accessInfo.traceId,
-                    'User': isDeeplink.current ? 'deeplink' : accessInfo.user,
+                    'Trace-ID': traceId,
+                    'User': accessPayload.isDeeplink ? 'deeplink' : accessPayload.user,
                 }
             }
         )
@@ -628,7 +647,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             {/* error msg */}
             {errorMsg && (
                 <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
-                    <div>{errorMsg} {!errorState.DB && `(Trace ID: ${accessInfo.traceId})`}</div>
+                    <div>{errorMsg} {!errorState.DB && `(Trace ID: ${traceId})`}</div>
                 </Alert>
             )}
 

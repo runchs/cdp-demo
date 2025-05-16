@@ -7,9 +7,13 @@ import { IConvertInfo } from '@/store/slices/accessInfoSlice'
 export const useConvertId = () => {
     const { setIsLoading } = useLoader();
 
-    const convertAeonId = useCallback((id: string, isDeeplink: boolean = false, user?: string): Promise<IConvertInfo> => {
+    const convertAeonId = useCallback((id: string, isDeeplink: boolean = false, traceId: string, user?: string): Promise<IConvertInfo> => {
         setIsLoading(true);
-        return axios.get('/convert/aeonid', { params: { aeon_id: id, user: isDeeplink ? 'deeplink' : user} })
+        return axios.get('/convert/aeonid', {
+            headers: {
+                'Trace-ID': traceId
+            }, params: { aeon_id: id, user: isDeeplink ? 'deeplink' : user }
+        })
             .then((response: any) => {
                 const resp = response.data;
                 return {
@@ -27,8 +31,12 @@ export const useConvertId = () => {
             });
     }, [setIsLoading]);
 
-    const convertCustomerId = useCallback((id: string, user?: string): Promise<IConvertInfo> => {
-        return axios.get('/convert/custid', { params: { cust_id: id, user: user } })
+    const convertCustomerId = useCallback((id: string, traceId: string, user?: string): Promise<IConvertInfo> => {
+        return axios.get('/convert/custid', {
+            headers: {
+                'Trace-ID': traceId
+            }, params: { cust_id: id, user: user }
+        })
             .then((response: any) => {
                 const resp = response.data;
                 return {
