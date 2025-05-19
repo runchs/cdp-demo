@@ -110,7 +110,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             }
         )
             .then((response: any) => {
-                dispatch(setTraceId(response.data["trace-id"]));
+                dispatch(setTraceId(response.data["trace_id"]));
             })
             .catch((error: any) => {
                 setIsLoading(false);
