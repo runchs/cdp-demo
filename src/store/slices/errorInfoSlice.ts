@@ -11,8 +11,9 @@ export interface IErrorState {
 
 interface IErrorInfo {
   errorMsg: string;
+  errorOfferResultMsg: string;
   showInfo: boolean;
-  errorState: IErrorState,
+  errorState: IErrorState,  
 }
 
 const initialErrorState: IErrorState = {
@@ -25,6 +26,7 @@ const initialErrorState: IErrorState = {
 
 const initialState: IErrorInfo = {
   errorMsg: '',
+  errorOfferResultMsg: '',
   showInfo: true,
   errorState: initialErrorState,
 };
@@ -38,6 +40,12 @@ export const errorInfoSlice = createSlice({
     },
     clearErrorMsg: (state) => {
       state.errorMsg = '';
+    },
+    setErrorOfferResultMsg: (state, action: PayloadAction<string>) => {
+      state.errorOfferResultMsg = action.payload;
+    },
+    clearErrorOfferResultMsg: (state) => {
+      state.errorOfferResultMsg = '';
     },
     setShowInfo: (state, action: PayloadAction<boolean>) => {
       state.showInfo = action.payload;
@@ -57,6 +65,8 @@ export const errorInfoSlice = createSlice({
 export const { 
   setErrorMsg, 
   clearErrorMsg, 
+  setErrorOfferResultMsg,
+  clearErrorOfferResultMsg,
   setShowInfo, 
   resetShowInfo, 
   setErrorState,

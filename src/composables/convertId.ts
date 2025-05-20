@@ -23,7 +23,7 @@ export const useConvertId = () => {
             })
             .catch((error: any) => {
                 console.error("Error:", error);
-                const err = error.response.data.error;
+                const err = error.response.data;
                 throw err.code === 'NOT_FOUND' ? err.details.db : err.message;
             })
             .finally(() => {
@@ -45,7 +45,7 @@ export const useConvertId = () => {
                 };
             })
             .catch((error: any) => {
-                const err = error.response.data.error;
+                const err = error.response.data;
                 throw err.code === 'NOT_FOUND' ? err.details.db : err.message;
             });
     }, []);

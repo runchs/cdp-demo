@@ -20,7 +20,7 @@ import { useLoader } from '@/contexts/LoaderContext';
 import { useAppSelector, useAppDispatch } from '@/store/hooks';
 import { setPayloadInfo, setTraceId, setConvertInfo } from '@/store/slices/accessInfoSlice';
 import { setCustomerInfo, COfferResult, IPromotion } from '@/store/slices/customerInfoSlice';
-import { setErrorMsg, clearErrorMsg, setShowInfo, IErrorState, setErrorState } from '@/store/slices/errorInfoSlice';
+import { setErrorMsg, clearErrorMsg, setErrorOfferResultMsg, setShowInfo, IErrorState, setErrorState } from '@/store/slices/errorInfoSlice';
 
 // api
 import axios from '@axios';
@@ -47,6 +47,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     const convertInfo = useAppSelector(state => state.accessInfo.convertInfo);
     const customerInfo = useAppSelector(state => state.customerInfo);
     const errorMsg = useAppSelector(state => state.errorInfo.errorMsg);
+    const errorOfferResultMsg = useAppSelector(state => state.errorInfo.errorOfferResultMsg);
     const showInfo = useAppSelector(state => state.errorInfo.showInfo);
     const errorState = useAppSelector(state => state.errorInfo.errorState);
 
@@ -100,17 +101,17 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             {
                 'link': accessPayload.link,
                 'ip': accessPayload.ip,
-                'is_deeplink': accessPayload.isDeeplink, 
+                'is_deeplink': accessPayload.isDeeplink,
                 'user': accessPayload.user,
             },
             {
                 headers: {
                     'Trace-ID': traceId,
-                },
+                }
             }
         )
             .then((response: any) => {
-                if(response.data["trace_id"]) {
+                if (response.data["trace_id"]) {
                     dispatch(setTraceId(response.data["trace_id"]));
                 } else {
                     setIsLoading(false);
@@ -123,7 +124,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                 dispatch(setErrorState({
                     AccessLog: true,
                 }));
-                dispatch(setErrorMsg(error.response.data.error.message));
+                dispatch(setErrorMsg(error.response.data.message));
             })
             .finally(() => {
             })
@@ -289,7 +290,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                 }, params: {
                     aeon_id: convertInfo.aeonId,
                     cust_id: convertInfo.customerId,
-                    user: accessPayload.isDeeplink ? 'deeplink' : accessPayload.user
+                    user: accessPayload.isDeeplink ? 'deeplink' : accessPayload.user,
                 }
             })
                 .then((response: any) => {
@@ -307,7 +308,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                     resolve(resp);
                 })
                 .catch((error: any) => {
-                    const err = error.response.data.error;
+                    const err = error.response.data;
                     reject(err);
                 })
         });
@@ -341,7 +342,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                     resolve(resp);
                 })
                 .catch((error: any) => {
-                    const err = error.response.data.error;
+                    const err = error.response.data;
                     reject(err);
                 })
         });
@@ -385,7 +386,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                     resolve(resp);
                 })
                 .catch((error: any) => {
-                    const err = error.response.data.error;
+                    const err = error.response.data;
                     reject(err);
                 })
         });
@@ -424,7 +425,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                     resolve(resp);
                 })
                 .catch((error: any) => {
-                    const err = error.response.data.error;
+                    const err = error.response.data;
                     reject(err);
                 })
         });
@@ -570,7 +571,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
                 headers: {
                     'Trace-ID': traceId,
                     'User': accessPayload.isDeeplink ? 'deeplink' : accessPayload.user,
-                }
+                },
             }
         )
             .then((response: any) => {
@@ -579,11 +580,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             .catch((error: any) => {
                 console.error("offeresult error:", error);
 
-                const err = error.response.data.error;
+                const err = error.response.data;
                 if (err.code === 'NOT_FOUND' || err.code === 'NO_RESPONSE') {
-                    dispatch(setErrorMsg(err.details.td));
+                    dispatch(setErrorOfferResultMsg(err.details.td));
                 } else {
-                    dispatch(setErrorMsg(err.message));
+                    dispatch(setErrorOfferResultMsg(err.message));
                 }
 
                 setShowModal(false);
@@ -655,11 +656,10 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
     return !isLoading ? (
         <div className="bg-whit c360-wrp" >
             {/* error msg */}
-            {errorMsg && (
-                <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
-                    <div>{errorMsg} {!errorState.AccessLog && `(Trace ID: ${traceId})`}</div>
-                </Alert>
-            )}
+
+            <Alert variant="warning" className="text-start fw-light py-2 px-3 fs-6 m-2">
+                <div>{errorMsg && (errorMsg)}{errorOfferResultMsg && (<span>, Offer Result: {errorOfferResultMsg}</span>)} {!errorState.AccessLog && `(Trace ID: ${traceId})`}</div>
+            </Alert>
 
             {/* card 1 */}
             {showInfo && (
