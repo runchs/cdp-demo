@@ -110,7 +110,11 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
             }
         )
             .then((response: any) => {
-                dispatch(setTraceId(response.data["trace_id"]));
+                if(response.data["trace_id"]) {
+                    dispatch(setTraceId(response.data["trace_id"]));
+                } else {
+                    setIsLoading(false);
+                }
             })
             .catch((error: any) => {
                 setIsLoading(false);
@@ -558,6 +562,7 @@ const C360Tabs: React.FC<IC360TabsProps> = ({ shouldFetch, onScrollTop }) => {
         axios.post('/dashboard/offeresult',
             {
                 aeon_id: convertInfo.aeonId,
+                cust_id: convertInfo.customerId,
                 promotion_code: selectedPromotion?.code,
                 promotion_result: selectedPromotion?.offerResult,
             },

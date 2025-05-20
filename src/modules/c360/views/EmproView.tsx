@@ -6,7 +6,7 @@ const EmproTab: React.FC = () => {
   const [iframeSrc, setIframeSrc] = useState<string | null>(null);
 
   useEffect(() => {
-    const baseUrl = "https://empro-auth.aeonth.com/auth/realms/empro/protocol/openid-connect/auth";
+    const baseUrl = "https://emprodev-auth.aeonth.com/auth/realms/empro/protocol/openid-connect/auth";
 
     if (location.pathname === "/c360") {
       const searchParams = location.search;
